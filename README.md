@@ -8,6 +8,15 @@ A Markdown editor built with Tauri (Rust) + React/TypeScript.
 - AI helpers (OpenAI-compatible / Claude / DeepSeek / Kimi / OpenRouter / Ollama)
 - Local history snapshots and auto save
 
+[中文使用说明](README.zh-CN.md)
+
+> This project is part of the Vibe Coding initiative.
+
+## Badges
+
+- Latest release: ![release](https://img.shields.io/github/v/release/Elemonbee/Markdown-Monkey?display_name=tag)
+- Downloads: ![downloads](https://img.shields.io/github/downloads/Elemonbee/Markdown-Monkey/total)
+
 ## Dev
 
 ```
@@ -37,6 +46,11 @@ pnpm tauri build
 - Outline: Toggle "Show Outline", jump to headers, drag width
 - Search/Replace: Toggle panel, supports regex and highlight in editor/preview
 - Export: Export HTML or PDF (client-side)
+
+## Screenshots
+
+![editor](assets/screenshot-editor.png)
+![ai-chat](assets/screenshot-ai-chat.png)
 
 ## Shortcuts
 - Ctrl+O: Open file

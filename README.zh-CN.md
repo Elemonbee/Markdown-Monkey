@@ -8,6 +8,15 @@
 - AI 助手（OpenAI 兼容 / Claude / DeepSeek / Kimi / OpenRouter / Ollama）
 - 本地历史快照与自动保存
 
+[English Guide](README.md)
+
+> 本项目属于 Vibe Coding 项目的一部分。
+
+## 徽章
+
+- 最新发行版：![release](https://img.shields.io/github/v/release/Elemonbee/Markdown-Monkey?display_name=tag)
+- 下载次数：![downloads](https://img.shields.io/github/downloads/Elemonbee/Markdown-Monkey/total)
+
 ## 开发
 
 ```
@@ -16,7 +25,7 @@ pnpm tauri dev
 ```
 
 ## 构建
-pnpm tauri dev
+
 ```
 pnpm tauri build
 ```
@@ -37,6 +46,11 @@ pnpm tauri build
 - 大纲面板：点击“显示大纲”切换，支持标题跳转与宽度拖拽
 - 搜索替换：点击“搜索/替换”，支持正则、编辑区/预览高亮
 - 导出：支持导出 HTML 与 PDF（前端生成）
+
+## 截图
+
+![editor](assets/screenshot-editor.png)
+![ai-chat](assets/screenshot-ai-chat.png)
 
 ## 快捷键
 - Ctrl+O：打开文件
