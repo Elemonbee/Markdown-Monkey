@@ -1,0 +1,8 @@
+node_modules/
+dist/
+.DS_Store
+src-tauri/target/
+*.log
+**/.vite/
+**/.turbo/
+**/.pnpm-store/

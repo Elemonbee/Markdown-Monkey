@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <defs>
+    <linearGradient id="g1" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#7f5a33"/>
+      <stop offset="100%" stop-color="#5b3e23"/>
+    </linearGradient>
+    <linearGradient id="g2" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#f3cf9a"/>
+      <stop offset="100%" stop-color="#e3b77c"/>
+    </linearGradient>
+    <filter id="shadow" x="-50%" y="-50%" width="200%" height="200%">
+      <feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="#000" flood-opacity="0.25"/>
+    </filter>
+  </defs>
+
+  <!-- background circle -->
+  <circle cx="512" cy="512" r="480" fill="#121212"/>
+
+  <!-- monkey head -->
+  <g filter="url(#shadow)">
+    <circle cx="512" cy="470" r="240" fill="url(#g1)"/>
+    <!-- ears -->
+    <circle cx="300" cy="470" r="90" fill="url(#g1)"/>
+    <circle cx="724" cy="470" r="90" fill="url(#g1)"/>
+    <circle cx="300" cy="470" r="52" fill="url(#g2)"/>
+    <circle cx="724" cy="470" r="52" fill="url(#g2)"/>
+    <!-- face mask -->
+    <ellipse cx="512" cy="520" rx="180" ry="150" fill="url(#g2)"/>
+    <!-- eyes -->
+    <circle cx="460" cy="490" r="18" fill="#202020"/>
+    <circle cx="564" cy="490" r="18" fill="#202020"/>
+    <!-- smile -->
+    <path d="M452 560 Q512 600 572 560" fill="none" stroke="#2a2a2a" stroke-width="12" stroke-linecap="round"/>
+  </g>
+
+  <!-- sign -->
+  <g transform="translate(162,640)" filter="url(#shadow)">
+    <rect x="0" y="0" width="700" height="220" rx="24" fill="#1f2937" stroke="#334155" stroke-width="6"/>
+    <text x="350" y="138" text-anchor="middle" font-family="Segoe UI, Inter, system-ui, -apple-system, Arial" font-size="92" font-weight="800" fill="#f3f4f6" letter-spacing="2">Markdown</text>
+  </g>
+
+  <!-- hands -->
+  <rect x="210" y="620" width="70" height="70" rx="20" fill="url(#g2)"/>
+  <rect x="744" y="620" width="70" height="70" rx="20" fill="url(#g2)"/>
+
+</svg>
+
+
