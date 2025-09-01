@@ -287,7 +287,7 @@ function App() {
 
   // 监听后端 fs 事件 → 刷新文件列表
   useEffect(() => {
-    let unlisten: any = null
+    let unlisten: (() => void) | null = null
     ;(async () => {
       try {
         const { listen } = await import('@tauri-apps/api/event')
@@ -422,9 +422,7 @@ function App() {
           const f = files[i]
           if (!f.type || !f.type.startsWith('image/')) continue
           const arr = await f.arrayBuffer()
-          const mod = await import('@tauri-apps/plugin-fs')
-          const writeBinaryFile = (mod as any).writeBinaryFile as (p: string, data: Uint8Array) => Promise<void>
-          const createDir = (mod as any).createDir as (p: string, opts: { recursive: boolean }) => Promise<void>
+          const { writeBinaryFile, createDir } = await import('@tauri-apps/plugin-fs')
           const pathSep = current_file_path.includes('\\') ? '\\' : '/'
           const dir = current_file_path.split(/[/\\]/).slice(0, -1).join(pathSep)
           const imagesDir = dir + pathSep + 'images'
@@ -1031,11 +1029,11 @@ function App() {
     <div className="container" ref={container_ref} style={{ gridTemplateColumns: `${show_outline ? outline_width : 0}px 6px ${Math.round(split_ratio*100)}% 6px ${100 - Math.round(split_ratio*100)}%` }}>
       <div className="settings_bar" style={{ gridColumn: '1 / -1' }}>
         <img src={monkeyIcon} alt="MarkdownMonkey" style={{ width: 22, height: 22, alignSelf: 'center' }} />
-        <button className="settings_btn" onClick={handle_open_file}>{t(ui_language as any, 'open')}</button>
-        <button className="settings_btn" onClick={handle_open_folder}>{t(ui_language as any, 'open_folder')}</button>
-        <button className="settings_btn" onClick={handle_save_file}>{current_file_path ? t(ui_language as any, 'save') : t(ui_language as any, 'save_as')}</button>
-        <button className="settings_btn" onClick={() => set_show_settings(true)}>{t(ui_language as any, 'settings')}</button>
-        <button className="settings_btn" onClick={() => { set_show_search(v => !v); if (!show_search) setTimeout(() => update_search_state(true), 0) }}>{show_search ? t(ui_language as any, 'close_search') : t(ui_language as any, 'search_replace')}</button>
+        <button className="settings_btn" onClick={handle_open_file}>{t(ui_language, 'open')}</button>
+        <button className="settings_btn" onClick={handle_open_folder}>{t(ui_language, 'open_folder')}</button>
+        <button className="settings_btn" onClick={handle_save_file}>{current_file_path ? t(ui_language, 'save') : t(ui_language, 'save_as')}</button>
+        <button className="settings_btn" onClick={() => set_show_settings(true)}>{t(ui_language, 'settings')}</button>
+        <button className="settings_btn" onClick={() => { set_show_search(v => !v); if (!show_search) setTimeout(() => update_search_state(true), 0) }}>{show_search ? t(ui_language, 'close_search') : t(ui_language, 'search_replace')}</button>
         <button className="settings_btn" onClick={async () => {
           // 导出 HTML
           const { save } = await import('@tauri-apps/plugin-dialog')
@@ -1045,7 +1043,7 @@ function App() {
           const html = `<!doctype html><html><head><meta charset="utf-8"/><title>${(current_file_path||'').split(/[/\\]/).pop()||'Document'}</title><style>body{font-family:system-ui,Segoe UI,Roboto,Helvetica,Arial;max-width:840px;margin:24px auto;padding:0 16px;line-height:1.7;} pre{background:#0b0b0b;color:#f3f3f3;padding:12px;border-radius:6px;overflow:auto;} code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;} h1,h2,h3{margin:1.2em 0 .6em}</style></head><body class="markdown_body">${rendered_html}</body></html>`
           await writeTextFile(target, html)
           alert('已导出 HTML 到: '+target)
-        }}>{t(ui_language as any, 'export_html')}</button>
+        }}>{t(ui_language, 'export_html')}</button>
         <button className="settings_btn" onClick={async () => {
           try {
             const { default: html2pdf } = await import('html2pdf.js')
@@ -1069,40 +1067,40 @@ function App() {
             })
             const bytes = new Uint8Array(await blob.arrayBuffer())
             await writeFile(target, bytes)
-            alert(t(ui_language as any, 'pdf_success') + target)
-          } catch (e) { console.error(e); alert(t(ui_language as any, 'pdf_failed') + e) }
-        }}>{t(ui_language as any, 'export_pdf')}</button>
-        <button className="settings_btn" onClick={handle_ai_complete}>{ai_enabled ? t(ui_language as any, 'ai_enabled') : t(ui_language as any, 'enable_ai')}</button>
+            alert(t(ui_language, 'pdf_success') + target)
+          } catch (e) { console.error(e); alert(t(ui_language, 'pdf_failed') + e) }
+        }}>{t(ui_language, 'export_pdf')}</button>
+        <button className="settings_btn" onClick={handle_ai_complete}>{ai_enabled ? t(ui_language, 'ai_enabled') : t(ui_language, 'enable_ai')}</button>
         {ai_enabled && (
           <>
-            <button className="settings_btn" onClick={() => set_show_ai_chat(true)}>{t(ui_language as any, 'ai_chat')}</button>
+            <button className="settings_btn" onClick={() => set_show_ai_chat(true)}>{t(ui_language, 'ai_chat')}</button>
             {show_ai_chat && (
               <button
                 className="settings_btn"
                 style={{ padding: '4px 6px', fontSize: 10, lineHeight: '1.1', height: 24, alignSelf: 'flex-end' }}
                 onClick={() => set_chat_reset_tick(Date.now())}
                 title="重置 AI 对话位置"
-              >{t(ui_language as any, 'reset_position')}</button>
+              >{t(ui_language, 'reset_position')}</button>
             )}
           </>
         )}
-        <button className="settings_btn" onClick={() => set_show_outline((v) => !v)}>{show_outline ? t(ui_language as any, 'hide_outline') : t(ui_language as any, 'show_outline')}</button>
+        <button className="settings_btn" onClick={() => set_show_outline((v) => !v)}>{show_outline ? t(ui_language, 'hide_outline') : t(ui_language, 'show_outline')}</button>
       </div>
       {show_search && (
         <div className="settings_bar" style={{ gridColumn: '1 / -1', gap: 8 }}>
-          <input className="settings_input" placeholder={t(ui_language as any, 'search_placeholder')} value={search_query} onChange={(e) => set_search_query(e.target.value)} onKeyDown={(e) => { if (e.key==='Enter') update_search_state(true) }} />
-          <input className="settings_input" placeholder={t(ui_language as any, 'replace_placeholder')} value={replace_query} onChange={(e) => set_replace_query(e.target.value)} />
+          <input className="settings_input" placeholder={t(ui_language, 'search_placeholder')} value={search_query} onChange={(e) => set_search_query(e.target.value)} onKeyDown={(e) => { if (e.key==='Enter') update_search_state(true) }} />
+          <input className="settings_input" placeholder={t(ui_language, 'replace_placeholder')} value={replace_query} onChange={(e) => set_replace_query(e.target.value)} />
           <label style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-            <input type="checkbox" checked={search_regex} onChange={(e) => set_search_regex(e.target.checked)} /> {t(ui_language as any, 'regex')}
+            <input type="checkbox" checked={search_regex} onChange={(e) => set_search_regex(e.target.checked)} /> {t(ui_language, 'regex')}
           </label>
           <label style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-            <input type="checkbox" checked={search_case_i} onChange={(e) => set_search_case_i(e.target.checked)} /> {t(ui_language as any, 'case_insensitive')}
+            <input type="checkbox" checked={search_case_i} onChange={(e) => set_search_case_i(e.target.checked)} /> {t(ui_language, 'case_insensitive')}
           </label>
-          <button className="settings_btn" onClick={() => update_search_state(true)}>{t(ui_language as any, 'search_btn')}</button>
-          <button className="settings_btn" onClick={search_prev}>{t(ui_language as any, 'prev')}</button>
-          <button className="settings_btn" onClick={search_next}>{t(ui_language as any, 'next')}</button>
-          <button className="settings_btn" onClick={replace_current}>{t(ui_language as any, 'replace')}</button>
-          <button className="settings_btn" onClick={replace_all}>{t(ui_language as any, 'replace_all')}</button>
+          <button className="settings_btn" onClick={() => update_search_state(true)}>{t(ui_language, 'search_btn')}</button>
+          <button className="settings_btn" onClick={search_prev}>{t(ui_language, 'prev')}</button>
+          <button className="settings_btn" onClick={search_next}>{t(ui_language, 'next')}</button>
+          <button className="settings_btn" onClick={replace_current}>{t(ui_language, 'replace')}</button>
+          <button className="settings_btn" onClick={replace_all}>{t(ui_language, 'replace_all')}</button>
           <div className="status_item">{search_total > 0 ? `${search_idx + 1}/${search_total}` : '0/0'}</div>
         </div>
       )}
@@ -1154,17 +1152,17 @@ function App() {
         <div style={{ position: 'fixed', left: tab_ctx_pos.x, top: tab_ctx_pos.y, zIndex: 9999, background: '#1f1f1f', border: '1px solid #3a3a3a', borderRadius: 4, padding: 4 }}
           onMouseLeave={() => set_tab_ctx_open(false)}
         >
-          <button className="settings_btn" style={{ display: 'block', width: 180, textAlign: 'left' }} onClick={() => { set_tab_ctx_open(false); set_open_tabs((prev) => prev.filter((p) => p === tab_ctx_path)); switch_to_tab(tab_ctx_path) }}>{t(ui_language as any, 'close_others')}</button>
-          <button className="settings_btn" style={{ display: 'block', width: 180, textAlign: 'left' }} onClick={() => { set_tab_ctx_open(false); const idx = open_tabs.indexOf(tab_ctx_path); set_open_tabs((prev) => prev.filter((_, i) => i <= idx)); switch_to_tab(tab_ctx_path) }}>{t(ui_language as any, 'close_right')}</button>
-          <button className="settings_btn" style={{ display: 'block', width: 180, textAlign: 'left' }} onClick={() => { set_tab_ctx_open(false); const path = tab_ctx_path; if (path) navigator.clipboard.writeText(path).catch(() => {}); }}>{t(ui_language as any, 'copy_path')}</button>
-          <button className="settings_btn" style={{ display: 'block', width: 180, textAlign: 'left' }} onClick={() => { set_tab_ctx_open(false); const path = tab_ctx_path; if (!path) return; const base = path.split(/[/\\]/).slice(0, -1).join('/'); set_workspace_root(base); set_side_tab('files') }}>{t(ui_language as any, 'locate_in_tree')}</button>
+          <button className="settings_btn" style={{ display: 'block', width: 180, textAlign: 'left' }} onClick={() => { set_tab_ctx_open(false); set_open_tabs((prev) => prev.filter((p) => p === tab_ctx_path)); switch_to_tab(tab_ctx_path) }}>{t(ui_language, 'close_others')}</button>
+          <button className="settings_btn" style={{ display: 'block', width: 180, textAlign: 'left' }} onClick={() => { set_tab_ctx_open(false); const idx = open_tabs.indexOf(tab_ctx_path); set_open_tabs((prev) => prev.filter((_, i) => i <= idx)); switch_to_tab(tab_ctx_path) }}>{t(ui_language, 'close_right')}</button>
+          <button className="settings_btn" style={{ display: 'block', width: 180, textAlign: 'left' }} onClick={() => { set_tab_ctx_open(false); const path = tab_ctx_path; if (path) navigator.clipboard.writeText(path).catch(() => {}); }}>{t(ui_language, 'copy_path')}</button>
+          <button className="settings_btn" style={{ display: 'block', width: 180, textAlign: 'left' }} onClick={() => { set_tab_ctx_open(false); const path = tab_ctx_path; if (!path) return; const base = path.split(/[/\\]/).slice(0, -1).join('/'); set_workspace_root(base); set_side_tab('files') }}>{t(ui_language, 'locate_in_tree')}</button>
         </div>
       )}
       {show_outline && (
         <div className="pane pane-outline" style={{ width: outline_width }}>
           <div className="sidebar_tabs">
-            <button className={`tab_button ${side_tab==='outline'?'active':''}`} onClick={() => set_side_tab('outline')}>{t(ui_language as any, 'tab_outline')}</button>
-            <button className={`tab_button ${side_tab==='files'?'active':''}`} onClick={() => set_side_tab('files')}>{t(ui_language as any, 'tab_files')}</button>
+            <button className={`tab_button ${side_tab==='outline'?'active':''}`} onClick={() => set_side_tab('outline')}>{t(ui_language, 'tab_outline')}</button>
+            <button className={`tab_button ${side_tab==='files'?'active':''}`} onClick={() => set_side_tab('files')}>{t(ui_language, 'tab_files')}</button>
           </div>
           {side_tab === 'outline' ? (
             <ul className="outline_list">
@@ -1185,16 +1183,16 @@ function App() {
               <div style={{ display: 'flex', gap: 6, marginBottom: 8 }}>
                 <button className="settings_btn" onClick={async () => {
                   const base = workspace_root || ''
-                  const name = window.prompt(t(ui_language as any, 'new_file') + ' (.md)', 'untitled.md')
+                  const name = window.prompt(t(ui_language, 'new_file') + ' (.md)', 'untitled.md')
                   if (!name) return
                   const full = (base ? base.replace(/\\/g,'/') + '/' : '') + name
                   try { const { invoke } = await import('@tauri-apps/api/core'); await invoke('create_empty_file', { path: full }); const { invoke: inv } = await import('@tauri-apps/api/core'); const paths = await inv<string[]>('list_md_files', { dir: workspace_root }); set_file_list(Array.from(new Set(paths)).sort()) } catch (e) { alert('新建失败：'+e) }
-                }}>{t(ui_language as any, 'new_file')}</button>
+                }}>{t(ui_language, 'new_file')}</button>
                 <button className="settings_btn" onClick={async () => {
                   const { invoke } = await import('@tauri-apps/api/core');
                   const paths = await invoke<string[]>('list_md_files', { dir: workspace_root });
                   set_file_list(Array.from(new Set(paths)).sort())
-                }}>{t(ui_language as any, 'refresh')}</button>
+                }}>{t(ui_language, 'refresh')}</button>
               </div>
               <ul className="outline_list">
                 {(() => {
@@ -1249,18 +1247,18 @@ function App() {
                           <li key={safe} className="outline_item" style={{ paddingLeft: prefix.length * 12 }}>
                             <button className="outline_btn" onDoubleClick={() => open_file_at(safe)} title={safe}>{fname}</button>
                             <div style={{ display: 'inline-flex', gap: 6, marginLeft: 6 }}>
-                              <button className="settings_btn" title={t(ui_language as any, 'rename')} onClick={async () => {
-                                const next = window.prompt(t(ui_language as any, 'rename') + '：', fname)
+                              <button className="settings_btn" title={t(ui_language, 'rename')} onClick={async () => {
+                                const next = window.prompt(t(ui_language, 'rename') + '：', fname)
                                 if (!next || next === fname) return
                                 const base = (safe.split(/[/\\]/).slice(0, -1).join('/'))
                                 const dst = (base ? base + '/' : '') + next
-                                try { const { invoke } = await import('@tauri-apps/api/core'); await invoke('rename_path', { src: safe, dst }); const paths = await invoke<string[]>('list_md_files', { dir: workspace_root }); set_file_list(Array.from(new Set(paths)).sort()) } catch (e) { alert(t(ui_language as any, 'rename') + ' 失败：'+e) }
-                              }}>{t(ui_language as any, 'rename')}</button>
-                              <button className="settings_btn" title={t(ui_language as any, 'remove')} onClick={async () => {
-                                if (!window.confirm(t(ui_language as any, 'remove') + '？\n'+safe)) return
-                                try { const { invoke } = await import('@tauri-apps/api/core'); await invoke('delete_path', { target: safe }); const paths = await invoke<string[]>('list_md_files', { dir: workspace_root }); set_file_list(Array.from(new Set(paths)).sort()) } catch (e) { alert(t(ui_language as any, 'remove') + ' 失败：'+e) }
-                              }}>{t(ui_language as any, 'remove')}</button>
-                              <button className="settings_btn" title={t(ui_language as any, 'copy_path')} onClick={async () => { try { await navigator.clipboard.writeText(safe) } catch {} }}>{t(ui_language as any, 'copy_path')}</button>
+                                try { const { invoke } = await import('@tauri-apps/api/core'); await invoke('rename_path', { src: safe, dst }); const paths = await invoke<string[]>('list_md_files', { dir: workspace_root }); set_file_list(Array.from(new Set(paths)).sort()) } catch (e) { alert(t(ui_language, 'rename') + ' 失败：'+e) }
+                              }}>{t(ui_language, 'rename')}</button>
+                              <button className="settings_btn" title={t(ui_language, 'remove')} onClick={async () => {
+                                if (!window.confirm(t(ui_language, 'remove') + '？\n'+safe)) return
+                                try { const { invoke } = await import('@tauri-apps/api/core'); await invoke('delete_path', { target: safe }); const paths = await invoke<string[]>('list_md_files', { dir: workspace_root }); set_file_list(Array.from(new Set(paths)).sort()) } catch (e) { alert(t(ui_language, 'remove') + ' 失败：'+e) }
+                              }}>{t(ui_language, 'remove')}</button>
+                              <button className="settings_btn" title={t(ui_language, 'copy_path')} onClick={async () => { try { await navigator.clipboard.writeText(safe) } catch {} }}>{t(ui_language, 'copy_path')}</button>
                             </div>
                           </li>
                         )
@@ -1331,11 +1329,11 @@ function App() {
         />
       </div>
       <div className="status_bar">
-        <div className="status_item">{t(ui_language as any, 'words')}: {status_stats.words}</div>
-        <div className="status_item">{t(ui_language as any, 'chars')}: {status_stats.chars}</div>
-        <div className="status_item">{t(ui_language as any, 'read_time')}: ~{status_stats.minutes} {ui_language==='en-US'?'min':'分钟'}</div>
+        <div className="status_item">{t(ui_language, 'words')}: {status_stats.words}</div>
+        <div className="status_item">{t(ui_language, 'chars')}: {status_stats.chars}</div>
+        <div className="status_item">{t(ui_language, 'read_time')}: ~{status_stats.minutes} {ui_language==='en-US'?'min':'分钟'}</div>
         <div style={{ flex: 1 }} />
-        <div className="status_item" title={current_file_path}>{current_file_path || t(ui_language as any, 'unsaved')}</div>
+        <div className="status_item" title={current_file_path}>{current_file_path || t(ui_language, 'unsaved')}</div>
       </div>
       <Settings_modal
         is_open={show_settings}
