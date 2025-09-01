@@ -10,7 +10,7 @@
 
 [English Guide](README.md)
 
-> 本项目属于 Vibe Coding 项目的一部分。
+> 本项目为 Vibe Coding 项目，主要代码由 AI 生成。
 
 ## 徽章
 
@@ -49,6 +49,7 @@ pnpm tauri build
 
 ## 截图
 
+<!-- 将实际截图放入 assets/ 目录并提交。以下为占位路径。 -->
 ![editor](assets/screenshot-editor.png)
 ![ai-chat](assets/screenshot-ai-chat.png)
 
