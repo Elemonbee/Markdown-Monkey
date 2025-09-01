@@ -10,7 +10,7 @@
 
 [English Guide](README.md)
 
-> 本项目为 Vibe Coding 项目，主要代码由 AI 生成。
+> 本项目为 Vibe Coding 项目，所有代码由 AI 生成。
 
 ## 徽章
 
