@@ -1,5 +1,7 @@
 # MarkdownMonkey
 
+![en](https://img.shields.io/badge/lang-English-blue) ![zh](https://img.shields.io/badge/lang-zh--CN-brightgreen) ![Tauri](https://img.shields.io/badge/Tauri-2.x-24C8DB?logo=tauri&logoColor=white) ![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=white) ![TypeScript](https://img.shields.io/badge/TypeScript-5-blue?logo=typescript&logoColor=white) ![Rust](https://img.shields.io/badge/Rust-stable-000?logo=rust&logoColor=white) ![Vite](https://img.shields.io/badge/Vite-7-646CFF?logo=vite&logoColor=white)
+
 一个基于 Tauri（Rust）+ React/TypeScript 的 Markdown 编辑器。
 
 - 实时预览与代码高亮
@@ -12,11 +14,7 @@
 
 > 本项目为 Vibe Coding 项目，所有代码由 AI 生成。
 
-## 徽章
-
-- 语言：![en](https://img.shields.io/badge/lang-English-blue) ![zh](https://img.shields.io/badge/lang-zh--CN-brightgreen)
-- 技术栈：![Tauri](https://img.shields.io/badge/Tauri-2.x-24C8DB?logo=tauri&logoColor=white) ![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=white) ![TypeScript](https://img.shields.io/badge/TypeScript-5-blue?logo=typescript&logoColor=white) ![Rust](https://img.shields.io/badge/Rust-stable-000?logo=rust&logoColor=white) ![Vite](https://img.shields.io/badge/Vite-7-646CFF?logo=vite&logoColor=white)
-- 下载次数：![downloads](https://img.shields.io/github/downloads/Elemonbee/Markdown-Monkey/total)
+ 
 
 ## 开发
 
