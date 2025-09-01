@@ -25,7 +25,7 @@ type Ai_chat_modal_props = {
  */
 export default function Ai_chat_modal(props: Ai_chat_modal_props) {
   const { is_open, provider, api_base_url, api_key, model, system_prompt, temperature, on_close, reset_signal, on_insert_to_editor, ui_language } = props
-  const lang = (ui_language as any) || 'zh-CN'
+  const lang = (ui_language as string) || 'zh-CN'
   const [messages, set_messages] = useState<ChatMessage[]>([])
   const [input, set_input] = useState<string>('')
   const [loading, set_loading] = useState<boolean>(false)
