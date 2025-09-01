@@ -29,7 +29,6 @@ type Ai_result_modal_props = {
  */
 export default function Ai_result_modal(props: Ai_result_modal_props) {
   const { is_open, loading, title, result_text, model_name, elapsed_ms, on_copy, on_replace, on_cancel, on_close, on_regen, on_copy_md, on_copy_code } = props
-  if (!is_open) return null
   const [isFull, set_isFull] = useState<boolean>(false)
   const [autoScroll, set_autoScroll] = useState<boolean>(true)
   const text_ref = useRef<HTMLTextAreaElement | null>(null)
@@ -86,7 +85,7 @@ export default function Ai_result_modal(props: Ai_result_modal_props) {
       </div>
     </div>
   )
-  return createPortal(content, document.body)
+  return is_open ? createPortal(content, document.body) : null
 }
 
 
