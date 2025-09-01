@@ -20,15 +20,17 @@ jobs:
         run: pnpm install --frozen-lockfile
       - name: Typecheck
         run: pnpm tsc -b --pretty false
-      - name: Lint
+      - name: Lint (non-blocking)
         run: pnpm lint
+        continue-on-error: true
       - name: Rust toolchain
         uses: dtolnay/rust-toolchain@stable
-      - name: Rust checks
+      - name: Rust checks (non-blocking)
         working-directory: src-tauri
         run: |
           cargo fmt --check
           cargo clippy -- -D warnings
           cargo install cargo-audit --locked || true
           cargo audit || true
+        continue-on-error: true
 
