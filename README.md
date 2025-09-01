@@ -52,8 +52,8 @@ pnpm tauri build
 <!-- Add your screenshots below (place files under assets/). Example names: -->
 <!-- assets/screenshot-editor.png, assets/screenshot-ai-chat.png -->
 <!-- If the images are not showing on GitHub, ensure the files are committed and pushed. -->
-![editor](assets/screenshot-editor.png)
-![ai-chat](assets/screenshot-ai-chat.png)
+![editor](assets/screenshot.png)
+![ai-chat](assets/screenshot2.png)
 
 ## Shortcuts
 - Ctrl+O: Open file

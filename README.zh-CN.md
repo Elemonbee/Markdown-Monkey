@@ -50,8 +50,8 @@ pnpm tauri build
 ## 截图
 
 <!-- 将实际截图放入 assets/ 目录并提交。以下为占位路径。 -->
-![editor](assets/screenshot-editor.png)
-![ai-chat](assets/screenshot-ai-chat.png)
+![editor](assets/screenshot.png)
+![ai-chat](assets/screenshot2.png)
 
 ## 快捷键
 - Ctrl+O：打开文件
