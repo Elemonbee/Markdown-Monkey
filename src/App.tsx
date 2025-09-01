@@ -79,7 +79,7 @@ function App() {
   const abort_ref = useRef<boolean>(false)
   const unsubscribe_ref = useRef<() => void>(() => {})
   const last_prompt_ref = useRef<string>('')
-  const autosave_timer_ref = useRef<any>(null)
+  const autosave_timer_ref = useRef<number | null>(null)
   const [history_enabled] = useState<boolean>(true)
   const [history_interval_ms] = useState<number>(15000)
   const [show_outline, set_show_outline] = useState<boolean>(false)
@@ -413,21 +413,22 @@ function App() {
 
   // 粘贴图片 -> 保存并插入
   useEffect(() => {
-    async function on_paste(ev: any) {
+    async function on_paste(ev: ClipboardEvent) {
       try {
-        const e: ClipboardEvent = ev
         if (!current_file_path) return
-        const files = e.clipboardData?.files
+        const files = ev.clipboardData?.files
         if (!files || files.length === 0) return
         for (let i = 0; i < files.length; i++) {
           const f = files[i]
           if (!f.type || !f.type.startsWith('image/')) continue
           const arr = await f.arrayBuffer()
-          const { writeBinaryFile, createDir } = await import('@tauri-apps/plugin-fs') as any
+          const mod = await import('@tauri-apps/plugin-fs')
+          const writeBinaryFile = (mod as any).writeBinaryFile as (p: string, data: Uint8Array) => Promise<void>
+          const createDir = (mod as any).createDir as (p: string, opts: { recursive: boolean }) => Promise<void>
           const pathSep = current_file_path.includes('\\') ? '\\' : '/'
           const dir = current_file_path.split(/[/\\]/).slice(0, -1).join(pathSep)
           const imagesDir = dir + pathSep + 'images'
-          try { await createDir(imagesDir, { recursive: true } as any) } catch {}
+          try { await createDir(imagesDir, { recursive: true }) } catch {}
           const nameSafe = `pasted_${Date.now()}.png`
           const target = imagesDir + pathSep + nameSafe
           await writeBinaryFile(target, new Uint8Array(arr))
@@ -1055,16 +1056,16 @@ function App() {
             temp.style.padding = '16px'
             temp.style.maxWidth = '840px'
             temp.innerHTML = rendered_html
-            const opt: any = {
+            const opt: Record<string, unknown> = {
               margin: [10, 10, 10, 10],
               filename: 'export.pdf',
               image: { type: 'jpeg', quality: 0.98 },
               html2canvas: { scale: 2, useCORS: true },
               jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
             }
-            const worker: any = (html2pdf as any)().set(opt).from(temp)
+            const worker = (html2pdf as any)().set(opt).from(temp)
             const blob: Blob = await new Promise((resolve, reject) => {
-              try { (worker as any).outputPdf('blob').then(resolve).catch(reject) } catch (e) { reject(e) }
+              try { worker.outputPdf('blob').then(resolve).catch(reject) } catch (e) { reject(e) }
             })
             const bytes = new Uint8Array(await blob.arrayBuffer())
             await writeFile(target, bytes)
