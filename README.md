@@ -14,7 +14,8 @@ A Markdown editor built with Tauri (Rust) + React/TypeScript.
 
 ## Badges
 
-- Latest release: ![release](https://img.shields.io/github/v/release/Elemonbee/Markdown-Monkey?display_name=tag)
+- Languages: ![en](https://img.shields.io/badge/lang-English-blue) ![zh](https://img.shields.io/badge/lang-zh--CN-brightgreen)
+- Stack: ![Tauri](https://img.shields.io/badge/Tauri-2.x-24C8DB?logo=tauri&logoColor=white) ![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=white) ![TypeScript](https://img.shields.io/badge/TypeScript-5-blue?logo=typescript&logoColor=white) ![Rust](https://img.shields.io/badge/Rust-stable-000?logo=rust&logoColor=white) ![Vite](https://img.shields.io/badge/Vite-7-646CFF?logo=vite&logoColor=white)
 - Downloads: ![downloads](https://img.shields.io/github/downloads/Elemonbee/Markdown-Monkey/total)
 
 ## Dev
