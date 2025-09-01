@@ -1,5 +1,8 @@
 use futures_util::StreamExt;
 use tauri::Emitter;
+use std::path::{Path, PathBuf};
+
+static mut WORKSPACE_ROOT: Option<String> = None;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -37,7 +40,7 @@ pub fn run() {
 
 #[tauri::command]
 async fn list_md_files(dir: String) -> Result<Vec<String>, String> {
-  use std::path::PathBuf;
+  set_workspace_root(&dir);
   fn walk_collect(p: PathBuf, out: &mut Vec<String>) {
     if let Ok(rd) = std::fs::read_dir(&p) {
       for e in rd.flatten() {
@@ -58,12 +61,28 @@ async fn list_md_files(dir: String) -> Result<Vec<String>, String> {
   Ok(out)
 }
 
+fn set_workspace_root(dir: &str) {
+  unsafe { WORKSPACE_ROOT = Some(dir.to_string()); }
+}
+
+fn ensure_in_workspace(path: &Path) -> Result<(), String> {
+  let p = std::fs::canonicalize(path).map_err(|e| e.to_string())?;
+  let root = unsafe { WORKSPACE_ROOT.clone() }.ok_or_else(|| "workspace not set".to_string())?;
+  let root_c = std::fs::canonicalize(&root).map_err(|e| e.to_string())?;
+  if !p.starts_with(&root_c) {
+    return Err("path outside of workspace".to_string());
+  }
+  Ok(())
+}
+
 #[tauri::command]
 async fn create_empty_file(path: String) -> Result<(), String> {
   use std::io::Write;
   if let Some(parent) = std::path::Path::new(&path).parent() {
+    ensure_in_workspace(parent)?;
     std::fs::create_dir_all(parent).map_err(|e| e.to_string())?;
   }
+  ensure_in_workspace(Path::new(&path))?;
   let mut f = std::fs::File::create(&path).map_err(|e| e.to_string())?;
   f.write_all(b"").map_err(|e| e.to_string())?;
   Ok(())
@@ -71,6 +90,8 @@ async fn create_empty_file(path: String) -> Result<(), String> {
 
 #[tauri::command]
 async fn rename_path(src: String, dst: String) -> Result<(), String> {
+  ensure_in_workspace(Path::new(&src))?;
+  if let Some(parent) = Path::new(&dst).parent() { ensure_in_workspace(parent)?; }
   std::fs::rename(src, dst).map_err(|e| e.to_string())?;
   Ok(())
 }
@@ -78,6 +99,7 @@ async fn rename_path(src: String, dst: String) -> Result<(), String> {
 #[tauri::command]
 async fn delete_path(target: String) -> Result<(), String> {
   let p = std::path::Path::new(&target);
+  ensure_in_workspace(p)?;
   if p.is_dir() {
     std::fs::remove_dir_all(p).map_err(|e| e.to_string())?
   } else {

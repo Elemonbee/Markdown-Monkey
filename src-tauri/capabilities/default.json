@@ -19,9 +19,7 @@
     "fs:allow-read",
     { "identifier": "fs:scope", "allow": [
       { "path": "$DESKTOP/**" },
-      { "path": "$HOME/**" },
-      { "path": "C:/**" },
-      { "path": "C\\**" }
+      { "path": "$HOME/**" }
     ] }
   ]
 }

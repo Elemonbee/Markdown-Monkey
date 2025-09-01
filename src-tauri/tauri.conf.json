@@ -20,7 +20,7 @@
       }
     ],
     "security": {
-      "csp": null,
+      "csp": "default-src 'self'; img-src 'self' data: blob: file:; style-src 'self' 'unsafe-inline'; script-src 'self'; connect-src 'self' https://api.openai.com https://openrouter.ai https://api.deepseek.com https://api.moonshot.cn https://api.anthropic.com http://127.0.0.1:11434",
       "capabilities": ["default"]
     }
   },
