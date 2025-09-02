@@ -20,11 +20,11 @@ export default tseslint.config([
       globals: globals.browser,
     },
     rules: {
-      // 临时放宽，避免大量历史代码阻断 CI；逐步修复后可再开启
-      '@typescript-eslint/no-explicit-any': 'off',
-      'no-empty': 'off',
-      'no-unused-expressions': 'off',
-      '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
+      // 温和收紧：逐步提升代码质量
+      '@typescript-eslint/no-explicit-any': 'warn',
+      'no-empty': ['error', { allowEmptyCatch: true }],
+      'no-unused-expressions': ['error', { allowShortCircuit: true, allowTernary: true, allowTaggedTemplates: true }],
+      '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_', varsIgnorePattern: '^_', caughtErrorsIgnorePattern: '^_' }],
     },
   },
 ])

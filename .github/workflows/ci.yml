@@ -20,9 +20,8 @@ jobs:
         run: pnpm install --frozen-lockfile
       - name: Typecheck
         run: pnpm tsc -b --pretty false
-      - name: Lint (non-blocking)
+      - name: Lint
         run: pnpm lint
-        continue-on-error: true
       - name: Rust toolchain
         uses: dtolnay/rust-toolchain@stable
       - name: Rust checks (non-blocking)
