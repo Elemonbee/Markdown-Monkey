@@ -35,7 +35,7 @@ pnpm tauri dev
 pnpm tauri build
 ```
 
-## Features (detailed)
+## Features 
 
 - Editing
   - CodeMirror 6, Markdown highlighting
