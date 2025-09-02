@@ -1448,6 +1448,7 @@ function App() {
         result_text={ai_result_text}
         model_name={model}
         elapsed_ms={ai_elapsed_ms}
+        ui_language={ui_language}
         on_copy={async () => { try { await navigator.clipboard.writeText(ai_result_text) } catch {} }}
         on_copy_md={async () => { try { await navigator.clipboard.writeText(ai_result_text) } catch {} }}
         on_copy_code={async () => { try { await navigator.clipboard.writeText('```\n' + ai_result_text + '\n```') } catch {} }}

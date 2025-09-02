@@ -121,6 +121,16 @@ const dict: Record<Lang, Record<string, string>> = {
     , var_style_ph: 'style（如 concise/formal）'
     , pdf_success: '已导出 PDF 到：'
     , pdf_failed: '导出 PDF 失败：'
+    , auto_scroll_on: '自动滚动：开'
+    , auto_scroll_off: '自动滚动：关'
+    , fullscreen: '全屏'
+    , exit_fullscreen: '退出全屏'
+    , processing_hint: '处理中… 可点击“取消”停止显示。'
+    , resize_hint: '可拖动右下角改变大小'
+    , copy: '复制'
+    , copy_md: '复制为 Markdown'
+    , copy_code: '复制为代码块'
+    , regenerate: '重新生成'
   },
   'en-US': {
     open: 'Open',
@@ -242,6 +252,16 @@ const dict: Record<Lang, Record<string, string>> = {
     , var_style_ph: 'style (e.g. concise/formal)'
     , pdf_success: 'Exported PDF to: '
     , pdf_failed: 'Failed to export PDF: '
+    , auto_scroll_on: 'Auto Scroll: On'
+    , auto_scroll_off: 'Auto Scroll: Off'
+    , fullscreen: 'Fullscreen'
+    , exit_fullscreen: 'Exit Fullscreen'
+    , processing_hint: 'Processing... You can click Cancel to stop displaying.'
+    , resize_hint: 'You can drag to resize.'
+    , copy: 'Copy'
+    , copy_md: 'Copy as Markdown'
+    , copy_code: 'Copy as Code Block'
+    , regenerate: 'Regenerate'
   }
 }
 
