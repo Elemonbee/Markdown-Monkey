@@ -69,19 +69,19 @@ export default function Ai_chat_modal(props: Ai_chat_modal_props) {
         if (typeof saved_p === 'string') set_chat_provider(saved_p)
         if (typeof saved_m === 'string') set_chat_model(saved_m)
         if (typeof saved_b === 'string') set_chat_base_url(saved_b)
-      } catch {}
+      } catch (_e) { /* ignore */ }
     }
     init()
   }, [])
 
   // 持久化：消息、输入、位置、最小化状态
-  useEffect(() => { (async () => { try { if (store_ref.current) { await store_ref.current.set('chat_messages', messages); await store_ref.current.save() } } catch {} })() }, [messages])
-  useEffect(() => { (async () => { try { if (store_ref.current) { await store_ref.current.set('chat_input', input); await store_ref.current.save() } } catch {} })() }, [input])
-  useEffect(() => { (async () => { try { if (store_ref.current) { await store_ref.current.set('chat_pos', pos); await store_ref.current.save() } } catch {} })() }, [pos])
-  useEffect(() => { (async () => { try { if (store_ref.current) { await store_ref.current.set('chat_minimized', isMin); await store_ref.current.save() } } catch {} })() }, [isMin])
-  useEffect(() => { (async () => { try { if (store_ref.current) { await store_ref.current.set('chat_provider', chat_provider); await store_ref.current.save() } } catch {} })() }, [chat_provider])
-  useEffect(() => { (async () => { try { if (store_ref.current) { await store_ref.current.set('chat_model', chat_model); await store_ref.current.save() } } catch {} })() }, [chat_model])
-  useEffect(() => { (async () => { try { if (store_ref.current) { await store_ref.current.set('chat_base_url', chat_base_url); await store_ref.current.save() } } catch {} })() }, [chat_base_url])
+  useEffect(() => { (async () => { try { if (store_ref.current) { await store_ref.current.set('chat_messages', messages); await store_ref.current.save() } } catch (_e) { /* ignore */ } })() }, [messages])
+  useEffect(() => { (async () => { try { if (store_ref.current) { await store_ref.current.set('chat_input', input); await store_ref.current.save() } } catch (_e) { /* ignore */ } })() }, [input])
+  useEffect(() => { (async () => { try { if (store_ref.current) { await store_ref.current.set('chat_pos', pos); await store_ref.current.save() } } catch (_e) { /* ignore */ } })() }, [pos])
+  useEffect(() => { (async () => { try { if (store_ref.current) { await store_ref.current.set('chat_minimized', isMin); await store_ref.current.save() } } catch (_e) { /* ignore */ } })() }, [isMin])
+  useEffect(() => { (async () => { try { if (store_ref.current) { await store_ref.current.set('chat_provider', chat_provider); await store_ref.current.save() } } catch (_e) { /* ignore */ } })() }, [chat_provider])
+  useEffect(() => { (async () => { try { if (store_ref.current) { await store_ref.current.set('chat_model', chat_model); await store_ref.current.save() } } catch (_e) { /* ignore */ } })() }, [chat_model])
+  useEffect(() => { (async () => { try { if (store_ref.current) { await store_ref.current.set('chat_base_url', chat_base_url); await store_ref.current.save() } } catch (_e) { /* ignore */ } })() }, [chat_base_url])
 
   // 根据 provider 自动切换 base_url（仅对聊天生效，不影响全局设置）
   useEffect(() => {
@@ -102,15 +102,18 @@ export default function Ai_chat_modal(props: Ai_chat_modal_props) {
     set_load_error('')
     try {
       const { invoke } = await import('@tauri-apps/api/core')
-      const v = await invoke<any>('list_models', { req: { provider: chat_provider, api_key, base_url: chat_base_url } })
+      const v = await invoke<unknown>('list_models', { req: { provider: chat_provider, api_key, base_url: chat_base_url } })
       let ids: string[] = []
-      if (v && Array.isArray((v as any).data)) {
-        ids = (v as any).data.map((m: any) => m.id || m.name).filter(Boolean)
-      } else if (v && Array.isArray((v as any).models)) {
-        ids = (v as any).models.map((m: any) => m.model || m.name || m.id).filter(Boolean)
+      if (typeof v === 'object' && v !== null) {
+        const maybe = v as { data?: Array<{ id?: string, name?: string }>, models?: Array<{ model?: string, name?: string, id?: string }> }
+        if (Array.isArray(maybe.data)) {
+          ids = maybe.data.map((m) => m.id || m.name || '').filter(Boolean) as string[]
+        } else if (Array.isArray(maybe.models)) {
+          ids = maybe.models.map((m) => m.model || m.name || m.id || '').filter(Boolean) as string[]
+        }
       }
       set_model_list(ids)
-    } catch (e: any) {
+    } catch (e: unknown) {
       set_load_error(String(e))
     } finally {
       set_loading_models(false)
@@ -121,7 +124,7 @@ export default function Ai_chat_modal(props: Ai_chat_modal_props) {
   useEffect(() => {
     if (typeof reset_signal === 'number') {
       set_pos({ x: 80, y: 80 })
-      ;(async () => { try { if (store_ref.current) { await store_ref.current.set('chat_pos', { x: 80, y: 80 }); await store_ref.current.save() } } catch {} })()
+      ;(async () => { try { if (store_ref.current) { await store_ref.current.set('chat_pos', { x: 80, y: 80 }); await store_ref.current.save() } } catch (_e) { /* ignore */ } })()
     }
   }, [reset_signal])
 
@@ -156,7 +159,7 @@ export default function Ai_chat_modal(props: Ai_chat_modal_props) {
     set_messages((prev) => [...prev, { role: 'assistant', content: '' }])
     set_loading(true)
     abort_ref.current = false
-    try { unsubscribe_ref.current(); } catch {}
+    try { unsubscribe_ref.current(); } catch (_e) { /* ignore */ }
 
     const { invoke } = await import('@tauri-apps/api/core')
     const { listen } = await import('@tauri-apps/api/event')
@@ -188,7 +191,7 @@ export default function Ai_chat_modal(props: Ai_chat_modal_props) {
           throttling = true
           setTimeout(() => { flush(); throttling = false }, 60)
         }
-      } catch {}
+      } catch (_e) { /* ignore */ }
     })
     unsubscribe_ref.current = unlisten
 
@@ -205,7 +208,7 @@ export default function Ai_chat_modal(props: Ai_chat_modal_props) {
           messages: messages.concat([{ role: 'user', content }])
         }
       })
-    } catch (e: any) {
+    } catch (e: unknown) {
       append_assistant_delta(`\n[Error] ${String(e)}`)
     } finally {
       set_loading(false)
@@ -261,7 +264,7 @@ export default function Ai_chat_modal(props: Ai_chat_modal_props) {
     <div className="modal_overlay" onClick={() => set_isMin(true)}>
       <div className="modal" onClick={(e) => e.stopPropagation()} style={{ position: 'fixed', left: pos.x, top: pos.y }}>
         <div className="modal_header" onMouseDown={on_header_down} style={{ cursor: 'move' }}>
-          <div className="modal_title">{t(lang as any, 'ai_chat')}</div>
+          <div className="modal_title">{t(lang, 'ai_chat')}</div>
           <select className="settings_input" style={{ width: 120, flexShrink: 0 }} value={chat_provider} onChange={(e) => set_chat_provider(e.target.value)}>
             <option value="openai">OpenAI</option>
             <option value="claude">Claude</option>
@@ -270,33 +273,33 @@ export default function Ai_chat_modal(props: Ai_chat_modal_props) {
             <option value="openrouter">OpenRouter</option>
             <option value="ollama">Ollama</option>
           </select>
-          <input className="settings_input" style={{ flex: 1, minWidth: 220 }} placeholder={chat_provider==='ollama'?t(lang as any,'base_url_ph_ollama'):t(lang as any,'base_url_ph_openai')} value={chat_base_url} onChange={(e) => set_chat_base_url(e.target.value)} />
-          <input className="settings_input" style={{ width: 200, flexShrink: 0 }} placeholder={chat_provider==='ollama'?t(lang as any,'model_ph_ollama'):t(lang as any,'model_ph_openai')} value={chat_model} onChange={(e) => set_chat_model(e.target.value)} />
-          <button className="settings_btn" style={{ whiteSpace: 'nowrap', minWidth: 84, flexShrink: 0 }} onClick={handle_fetch_models}>{loading_models ? t(lang as any,'loading_text') : t(lang as any,'get_models_btn')}</button>
+          <input className="settings_input" style={{ flex: 1, minWidth: 220 }} placeholder={chat_provider==='ollama'?t(lang,'base_url_ph_ollama'):t(lang,'base_url_ph_openai')} value={chat_base_url} onChange={(e) => set_chat_base_url(e.target.value)} />
+          <input className="settings_input" style={{ width: 200, flexShrink: 0 }} placeholder={chat_provider==='ollama'?t(lang,'model_ph_ollama'):t(lang,'model_ph_openai')} value={chat_model} onChange={(e) => set_chat_model(e.target.value)} />
+          <button className="settings_btn" style={{ whiteSpace: 'nowrap', minWidth: 84, flexShrink: 0 }} onClick={handle_fetch_models}>{loading_models ? t(lang,'loading_text') : t(lang,'get_models_btn')}</button>
           <div style={{ width: '100%', display: 'flex', gap: 8, flexWrap: 'nowrap' }}>
             <select className="settings_input" style={{ width: 220, maxWidth: 320, flexShrink: 0 }} value={chat_model} onChange={(e) => set_chat_model(e.target.value)}>
-              <option value="">{t(lang as any,'select_model_placeholder')}</option>
+              <option value="">{t(lang,'select_model_placeholder')}</option>
               {model_list.map((m) => (<option key={m} value={m}>{m}</option>))}
             </select>
-            <button className="settings_btn" onClick={() => set_isMin(true)}>{t(lang as any,'minimize')}</button>
-            <button className="settings_btn" onClick={on_close}>{t(lang as any,'close')}</button>
+            <button className="settings_btn" onClick={() => set_isMin(true)}>{t(lang,'minimize')}</button>
+            <button className="settings_btn" onClick={on_close}>{t(lang,'close')}</button>
           </div>
         </div>
-        {load_error && <div style={{ color: '#f88', fontSize: 12, margin: '4px 16px 0' }}>{t(lang as any,'error_prefix')} {load_error}</div>}
+        {load_error && <div style={{ color: '#f88', fontSize: 12, margin: '4px 16px 0' }}>{t(lang,'error_prefix')} {load_error}</div>}
         <div className="modal_body" style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           <div ref={list_ref} style={{ maxHeight: 360, overflow: 'auto', padding: '6px 2px', border: '1px solid #2b2b2b', borderRadius: 8 }}>
             {messages.length === 0 ? (
-              <div style={{ color: '#cfcfcf', fontSize: 13 }}>{t(lang as any,'start_chat')}</div>
+              <div style={{ color: '#cfcfcf', fontSize: 13 }}>{t(lang,'start_chat')}</div>
             ) : (
               messages.map((m, i) => (
                 <div key={i} style={{ margin: '8px 6px', whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
-                  <div style={{ fontSize: 12, opacity: 0.8, marginBottom: 4 }}>{m.role === 'user' ? t(lang as any,'you') : t(lang as any,'ai_label')}</div>
+                  <div style={{ fontSize: 12, opacity: 0.8, marginBottom: 4 }}>{m.role === 'user' ? t(lang,'you') : t(lang,'ai_label')}</div>
                   <div style={{ fontSize: 14 }}>{m.content}</div>
                 </div>
               ))
             )}
           </div>
-          <textarea className="settings_input" style={{ height: 80 }} placeholder={t(lang as any,'type_message_placeholder')} value={input}
+          <textarea className="settings_input" style={{ height: 80 }} placeholder={t(lang,'type_message_placeholder')} value={input}
             onChange={(e) => set_input(e.target.value)}
             onKeyDown={(e) => {
               if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handle_send() }
@@ -305,14 +308,14 @@ export default function Ai_chat_modal(props: Ai_chat_modal_props) {
         </div>
         <div className="modal_footer">
           {loading ? (
-            <button className="settings_btn" onClick={handle_cancel}>{t(lang as any,'cancel')}</button>
+            <button className="settings_btn" onClick={handle_cancel}>{t(lang,'cancel')}</button>
           ) : (
             <>
-              <button className="settings_btn" onClick={handle_send}>{t(lang as any,'send')}</button>
+              <button className="settings_btn" onClick={handle_send}>{t(lang,'send')}</button>
               <button className="settings_btn" onClick={() => {
                 const lastAssistant = [...messages].reverse().find(m => m.role === 'assistant')
                 if (lastAssistant && on_insert_to_editor) on_insert_to_editor(lastAssistant.content || '')
-              }}>{t(lang as any,'insert_to_editor')}</button>
+              }}>{t(lang,'insert_to_editor')}</button>
               <button className="settings_btn" onClick={async () => {
                 try {
                   const { save } = await import('@tauri-apps/plugin-dialog')
@@ -320,13 +323,13 @@ export default function Ai_chat_modal(props: Ai_chat_modal_props) {
                   const target = await save({ filters: [{ name: 'JSON', extensions: ['json'] }], defaultPath: 'chat_session.json' })
                   if (!target) return
                   await writeTextFile(target, JSON.stringify({ provider: chat_provider, model: chat_model, base_url: chat_base_url, messages }, null, 2))
-                } catch {}
-              }}>{t(lang as any,'export')}</button>
-              <button className="settings_btn" onClick={() => set_messages([])}>{t(lang as any,'clear')}</button>
+                } catch (_e) { /* ignore */ }
+              }}>{t(lang,'export')}</button>
+              <button className="settings_btn" onClick={() => set_messages([])}>{t(lang,'clear')}</button>
             </>
           )}
           <div style={{ flex: 1 }} />
-          <button className="settings_btn" onClick={on_close}>{t(lang as any,'close')}</button>
+          <button className="settings_btn" onClick={on_close}>{t(lang,'close')}</button>
         </div>
       </div>
     </div>

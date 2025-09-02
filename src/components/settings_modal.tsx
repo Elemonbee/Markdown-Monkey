@@ -98,17 +98,20 @@ export default function Settings_modal(props: Settings_modal_props) {
     set_load_error('')
     try {
       const { invoke } = await import('@tauri-apps/api/core')
-      const v = await invoke<any>('list_models', {
+      const v = await invoke<unknown>('list_models', {
         req: { provider, api_key, base_url: api_base_url }
       })
       let ids: string[] = []
-      if (v && Array.isArray((v as any).data)) {
-        ids = (v as any).data.map((m: any) => m.id || m.name).filter(Boolean)
-      } else if (v && Array.isArray((v as any).models)) {
-        ids = (v as any).models.map((m: any) => m.model || m.name || m.id).filter(Boolean)
+      if (typeof v === 'object' && v !== null) {
+        const maybe = v as { data?: Array<{ id?: string, name?: string }>, models?: Array<{ model?: string, name?: string, id?: string }> }
+        if (Array.isArray(maybe.data)) {
+          ids = maybe.data.map((m) => m.id || m.name || '').filter(Boolean) as string[]
+        } else if (Array.isArray(maybe.models)) {
+          ids = maybe.models.map((m) => m.model || m.name || m.id || '').filter(Boolean) as string[]
+        }
       }
       set_model_list(ids)
-    } catch (e: any) {
+    } catch (e: unknown) {
       set_load_error(String(e))
     } finally {
       set_loading_models(false)
@@ -119,34 +122,34 @@ export default function Settings_modal(props: Settings_modal_props) {
     <div className="modal_overlay" onClick={on_close}>
       <div className="modal" onClick={(e) => e.stopPropagation()}>
         <div className="modal_header">
-          <div className="modal_title">{t(ui_language as any, 'settings_title')}</div>
-          <button className="settings_btn" onClick={on_close}>{t(ui_language as any, 'close')}</button>
+          <div className="modal_title">{t(ui_language || 'zh-CN', 'settings_title')}</div>
+          <button className="settings_btn" onClick={on_close}>{t(ui_language || 'zh-CN', 'close')}</button>
         </div>
         <div className="modal_body">
           <div className="tabs">
-            <button className={`tab_button ${active_tab === 'ui' ? 'active' : ''}`} onClick={() => set_active_tab('ui')}>{t(ui_language as any, 'tab_ui')}</button>
-            <button className={`tab_button ${active_tab === 'ai' ? 'active' : ''}`} onClick={() => set_active_tab('ai')}>{t(ui_language as any, 'tab_ai')}</button>
-            <button className={`tab_button ${active_tab === 'templates' ? 'active' : ''}`} onClick={() => set_active_tab('templates')}>{t(ui_language as any, 'tab_templates')}</button>
+            <button className={`tab_button ${active_tab === 'ui' ? 'active' : ''}`} onClick={() => set_active_tab('ui')}>{t(ui_language || 'zh-CN', 'tab_ui')}</button>
+            <button className={`tab_button ${active_tab === 'ai' ? 'active' : ''}`} onClick={() => set_active_tab('ai')}>{t(ui_language || 'zh-CN', 'tab_ai')}</button>
+            <button className={`tab_button ${active_tab === 'templates' ? 'active' : ''}`} onClick={() => set_active_tab('templates')}>{t(ui_language || 'zh-CN', 'tab_templates')}</button>
           </div>
 
           {active_tab === 'ui' && (
             <div className="tab_panel">
               {recent_files.length > 0 && (
                 <div style={{ marginBottom: 12 }}>
-                  <div style={{ color: '#cfcfcf', fontSize: 13, marginBottom: 6 }}>{t(ui_language as any, 'recent_files_label')}</div>
+                  <div style={{ color: '#cfcfcf', fontSize: 13, marginBottom: 6 }}>{t(ui_language || 'zh-CN', 'recent_files_label')}</div>
                   <ul style={{ margin: 0, paddingLeft: 18 }}>
                     {recent_files.slice(0, 10).map((p) => (
                       <li key={p} style={{ wordBreak: 'break-all', margin: '4px 0' }}>
-                        <button className="settings_btn" onClick={() => on_open_recent && on_open_recent(p)} title={p}>{t(ui_language as any, 'open_label')}</button>
+                        <button className="settings_btn" onClick={() => on_open_recent && on_open_recent(p)} title={p}>{t(ui_language || 'zh-CN', 'open_label')}</button>
                         <span style={{ marginLeft: 8, opacity: 0.9 }}>{p}</span>
                       </li>
                     ))}
                   </ul>
-                  {clear_recent_files && <button className="settings_btn" style={{ marginTop: 8 }} onClick={clear_recent_files}>{t(ui_language as any, 'clear_recent')}</button>}
+                  {clear_recent_files && <button className="settings_btn" style={{ marginTop: 8 }} onClick={clear_recent_files}>{t(ui_language || 'zh-CN', 'clear_recent')}</button>}
                 </div>
               )}
               <div className="form_row">
-                <label className="form_label">{t(ui_language as any, 'editor_font_size')}</label>
+                <label className="form_label">{t(ui_language || 'zh-CN', 'editor_font_size')}</label>
                 <input
                   className="settings_input"
                   placeholder="16"
@@ -159,7 +162,7 @@ export default function Settings_modal(props: Settings_modal_props) {
                 />
               </div>
               <div className="form_row">
-                <label className="form_label">{t(ui_language as any, 'preview_font_size')}</label>
+                <label className="form_label">{t(ui_language || 'zh-CN', 'preview_font_size')}</label>
                 <input
                   className="settings_input"
                   placeholder="16"
@@ -172,14 +175,14 @@ export default function Settings_modal(props: Settings_modal_props) {
                 />
               </div>
               <div className="form_row">
-                <label className="form_label">{t(ui_language as any, 'language')}</label>
+                <label className="form_label">{t(ui_language || 'zh-CN', 'language')}</label>
                 <select className="settings_input" value={ui_language} onChange={(e) => set_ui_language && set_ui_language(e.target.value)}>
                   <option value="zh-CN">简体中文</option>
                   <option value="en-US">English</option>
                 </select>
               </div>
               <div className="form_row">
-                <label className="form_label">{t(ui_language as any, 'theme')}</label>
+                <label className="form_label">{t(ui_language || 'zh-CN', 'theme')}</label>
                 <select className="settings_input" value={ui_theme} onChange={(e) => set_ui_theme && set_ui_theme(e.target.value)}>
                   <option value="dark">{t(ui_language as any, 'theme_dark')}</option>
                   <option value="light">{t(ui_language as any, 'theme_light')}</option>
@@ -192,7 +195,7 @@ export default function Settings_modal(props: Settings_modal_props) {
           {active_tab === 'ai' && (
             <div className="tab_panel">
               <div className="form_row">
-                <label className="form_label">{t(ui_language as any, 'provider')}</label>
+                <label className="form_label">{t(ui_language || 'zh-CN', 'provider')}</label>
                 <select className="settings_input" value={provider} onChange={(e) => set_provider(e.target.value)}>
                   <option value="openai">OpenAI</option>
                   <option value="claude">Claude</option>
@@ -203,19 +206,19 @@ export default function Settings_modal(props: Settings_modal_props) {
                 </select>
               </div>
               <div className="form_row">
-                <label className="form_label">{t(ui_language as any, 'api_base_url')}</label>
+                <label className="form_label">{t(ui_language || 'zh-CN', 'api_base_url')}</label>
                 <input
                   className="settings_input"
-                  placeholder={is_ollama ? t(ui_language as any, 'base_url_ph_ollama') : t(ui_language as any, 'base_url_ph_openai')}
+                  placeholder={is_ollama ? t(ui_language || 'zh-CN', 'base_url_ph_ollama') : t(ui_language || 'zh-CN', 'base_url_ph_openai')}
                   value={api_base_url}
                   onChange={(e) => set_api_base_url(e.target.value)}
                 />
               </div>
               <div className="form_row">
-                <label className="form_label">{t(ui_language as any, 'api_key')}</label>
+                <label className="form_label">{t(ui_language || 'zh-CN', 'api_key')}</label>
                 <input
                   className="settings_input"
-                  placeholder={is_ollama ? t(ui_language as any, 'api_key_ph_ollama') : t(ui_language as any, 'api_key_ph_required')}
+                  placeholder={is_ollama ? t(ui_language || 'zh-CN', 'api_key_ph_ollama') : t(ui_language || 'zh-CN', 'api_key_ph_required')}
                   value={api_key}
                   onChange={(e) => set_api_key(e.target.value)}
                   type="password"
@@ -223,41 +226,41 @@ export default function Settings_modal(props: Settings_modal_props) {
                 />
               </div>
               <div className="form_row">
-                <label className="form_label">{t(ui_language as any, 'model_label')}</label>
+                <label className="form_label">{t(ui_language || 'zh-CN', 'model_label')}</label>
                 <input
                   className="settings_input"
-                  placeholder={is_ollama ? t(ui_language as any, 'model_ph_ollama') : t(ui_language as any, 'model_ph_openai')}
+                  placeholder={is_ollama ? t(ui_language || 'zh-CN', 'model_ph_ollama') : t(ui_language || 'zh-CN', 'model_ph_openai')}
                   value={model}
                   onChange={(e) => set_model(e.target.value)}
                 />
               </div>
               <div className="form_row">
-                <label className="form_label">{t(ui_language as any, 'model_list_label')}</label>
+                <label className="form_label">{t(ui_language || 'zh-CN', 'model_list_label')}</label>
                 <div style={{ display: 'flex', gap: 8, width: '100%' }}>
-                  <button className="settings_btn" onClick={handle_fetch_models}>{loading_models ? t(ui_language as any, 'loading_text') : t(ui_language as any, 'get_models_btn')}</button>
+                  <button className="settings_btn" onClick={handle_fetch_models}>{loading_models ? t(ui_language || 'zh-CN', 'loading_text') : t(ui_language || 'zh-CN', 'get_models_btn')}</button>
                   <select className="settings_input" value={model} onChange={(e) => set_model(e.target.value)}>
-                    <option value="">{t(ui_language as any, 'select_model_placeholder')}</option>
+                    <option value="">{t(ui_language || 'zh-CN', 'select_model_placeholder')}</option>
                     {model_list.map((m) => (
                       <option key={m} value={m}>{m}</option>
                     ))}
                   </select>
                 </div>
               </div>
-              {load_error && <div style={{ color: '#f88', fontSize: 12, marginTop: 4 }}>{t(ui_language as any, 'error_prefix')} {load_error}</div>}
+              {load_error && <div style={{ color: '#f88', fontSize: 12, marginTop: 4 }}>{t(ui_language || 'zh-CN', 'error_prefix')} {load_error}</div>}
               <div className="form_row">
-                <label className="form_label">{t(ui_language as any, 'system_prompt_label')}</label>
+                <label className="form_label">{t(ui_language || 'zh-CN', 'system_prompt_label')}</label>
                 <input
                   className="settings_input"
-                  placeholder={t(ui_language as any, 'system_prompt_placeholder')}
+                  placeholder={t(ui_language || 'zh-CN', 'system_prompt_placeholder')}
                   value={system_prompt}
                   onChange={(e) => set_system_prompt(e.target.value)}
                 />
               </div>
               <div className="form_row">
-                <label className="form_label">{t(ui_language as any, 'temperature_label')}</label>
+                <label className="form_label">{t(ui_language || 'zh-CN', 'temperature_label')}</label>
                 <input
                   className="settings_input"
-                  placeholder={t(ui_language as any, 'temperature_placeholder')}
+                  placeholder={t(ui_language || 'zh-CN', 'temperature_placeholder')}
                   value={temperature}
                   onChange={(e) => set_temperature(Number(e.target.value))}
                   type="number"
@@ -271,15 +274,15 @@ export default function Settings_modal(props: Settings_modal_props) {
 
           {active_tab === 'templates' && (
             <div className="tab_panel">
-              <div style={{ color: '#cfcfcf', fontSize: 13, marginBottom: 8 }}>{t(ui_language as any, 'ai_menu_title')}</div>
+              <div style={{ color: '#cfcfcf', fontSize: 13, marginBottom: 8 }}>{t(ui_language || 'zh-CN', 'ai_menu_title')}</div>
               {[
-                { id: 'continue_selection', label: t(ui_language as any, 'continue_sel') },
-                { id: 'continue_document', label: t(ui_language as any, 'continue_doc') },
-                { id: 'rewrite_selection', label: t(ui_language as any, 'rewrite_sel') },
-                { id: 'translate_zh_selection', label: t(ui_language as any, 'translate_zh_sel') },
-                { id: 'translate_en_selection', label: t(ui_language as any, 'translate_en_sel') },
-                { id: 'summary_selection', label: t(ui_language as any, 'summary_sel') },
-                { id: 'summary_document', label: t(ui_language as any, 'summary_doc') },
+                { id: 'continue_selection', label: t(ui_language || 'zh-CN', 'continue_sel') },
+                { id: 'continue_document', label: t(ui_language || 'zh-CN', 'continue_doc') },
+                { id: 'rewrite_selection', label: t(ui_language || 'zh-CN', 'rewrite_sel') },
+                { id: 'translate_zh_selection', label: t(ui_language || 'zh-CN', 'translate_zh_sel') },
+                { id: 'translate_en_selection', label: t(ui_language || 'zh-CN', 'translate_en_sel') },
+                { id: 'summary_selection', label: t(ui_language || 'zh-CN', 'summary_sel') },
+                { id: 'summary_document', label: t(ui_language || 'zh-CN', 'summary_doc') },
               ].map((item) => (
                 <div key={item.id} className="form_row">
                   <label className="form_label">{item.label}</label>
@@ -323,7 +326,7 @@ export default function Settings_modal(props: Settings_modal_props) {
               {ai_custom_templates.map((tpl, idx) => (
                 <div key={tpl.id} style={{ border: '1px solid #2b2b2b', borderRadius: 8, padding: 8, marginBottom: 8 }}>
                   <div className="form_row">
-                    <label className="form_label">{t(ui_language as any, 'title_label_i18n')}</label>
+                    <label className="form_label">{t(ui_language || 'zh-CN', 'title_label_i18n')}</label>
                     <input className="settings_input" value={tpl.title} onChange={(e) => {
                       const next = [...ai_custom_templates]
                       next[idx] = { ...tpl, title: e.target.value }
@@ -331,18 +334,18 @@ export default function Settings_modal(props: Settings_modal_props) {
                     }} />
                   </div>
                   <div className="form_row">
-                    <label className="form_label">{t(ui_language as any, 'scope_label_i18n')}</label>
+                    <label className="form_label">{t(ui_language || 'zh-CN', 'scope_label_i18n')}</label>
                     <select className="settings_input" value={tpl.scope} onChange={(e) => {
                       const next = [...ai_custom_templates]
                       next[idx] = { ...tpl, scope: (e.target.value as 'selection' | 'document') }
                       set_ai_custom_templates(next)
                     }}>
-                      <option value="selection">{t(ui_language as any, 'scope_selection')}</option>
-                      <option value="document">{t(ui_language as any, 'scope_document')}</option>
+                      <option value="selection">{t(ui_language || 'zh-CN', 'scope_selection')}</option>
+                      <option value="document">{t(ui_language || 'zh-CN', 'scope_document')}</option>
                     </select>
                   </div>
                   <div className="form_row" style={{ alignItems: 'flex-start' }}>
-                    <label className="form_label">{t(ui_language as any, 'prompt_label_i18n')}</label>
+                    <label className="form_label">{t(ui_language || 'zh-CN', 'prompt_label_i18n')}</label>
                     <textarea className="settings_input" style={{ height: 100 }} value={tpl.body} onChange={(e) => {
                       const next = [...ai_custom_templates]
                       next[idx] = { ...tpl, body: e.target.value }
@@ -350,7 +353,7 @@ export default function Settings_modal(props: Settings_modal_props) {
                     }} />
                   </div>
                   <div className="form_row">
-                    <label className="form_label">{t(ui_language as any, 'vars_label_i18n')}</label>
+                    <label className="form_label">{t(ui_language || 'zh-CN', 'vars_label_i18n')}</label>
                     <div style={{ display: 'flex', gap: 8, width: '100%' }}>
                       <input className="settings_input" placeholder="lang (e.g. zh-CN/en-US)" value={tpl.vars?.lang || ''} onChange={(e) => {
                         const next = [...ai_custom_templates]
@@ -365,7 +368,7 @@ export default function Settings_modal(props: Settings_modal_props) {
                     </div>
                   </div>
                   <div className="form_row">
-                    <label className="form_label">{t(ui_language as any, 'enabled_label_i18n')}</label>
+                    <label className="form_label">{t(ui_language || 'zh-CN', 'enabled_label_i18n')}</label>
                     <input type="checkbox" checked={tpl.enabled} onChange={(e) => {
                       const next = [...ai_custom_templates]
                       next[idx] = { ...tpl, enabled: e.target.checked }
@@ -375,7 +378,7 @@ export default function Settings_modal(props: Settings_modal_props) {
                     <button className="settings_btn" onClick={() => {
                       const next = ai_custom_templates.filter((x) => x.id !== tpl.id)
                       set_ai_custom_templates(next)
-                    }}>{t(ui_language as any, 'delete_btn')}</button>
+                    }}>{t(ui_language || 'zh-CN', 'delete_btn')}</button>
                   </div>
                 </div>
               ))}
@@ -387,7 +390,7 @@ export default function Settings_modal(props: Settings_modal_props) {
                     ...ai_custom_templates,
                     { id, title: '新模板', body: '请基于以下内容执行你的任务：\n\n{text}', scope: 'selection', enabled: true }
                   ])
-                }}>{t(ui_language as any, 'new_template_btn')}</button>
+                }}>{t(ui_language || 'zh-CN', 'new_template_btn')}</button>
                 <button className="settings_btn" onClick={async () => {
                   try {
                     const { save } = await import('@tauri-apps/plugin-dialog')
@@ -396,7 +399,7 @@ export default function Settings_modal(props: Settings_modal_props) {
                     if (!target) return
                     await writeTextFile(target, JSON.stringify(ai_custom_templates, null, 2))
                   } catch (e) { console.error(e) }
-                }}>{t(ui_language as any, 'export_templates_btn')}</button>
+                }}>{t(ui_language || 'zh-CN', 'export_templates_btn')}</button>
                 <button className="settings_btn" onClick={async () => {
                   try {
                     const { open } = await import('@tauri-apps/plugin-dialog')
@@ -411,15 +414,15 @@ export default function Settings_modal(props: Settings_modal_props) {
                       alert('Invalid file content: expected array')
                     }
                   } catch (e) { console.error(e) }
-                }}>{t(ui_language as any, 'import_templates_btn')}</button>
+                }}>{t(ui_language || 'zh-CN', 'import_templates_btn')}</button>
               </div>
             </div>
           )}
         </div>
         <div className="modal_footer">
-          {active_tab === 'ai' && <button className="settings_btn" onClick={on_test}>{t(ui_language as any, 'test_connection')}</button>}
+          {active_tab === 'ai' && <button className="settings_btn" onClick={on_test}>{t(ui_language || 'zh-CN', 'test_connection')}</button>}
           <div style={{ flex: 1 }} />
-          <button className="settings_btn" onClick={on_save}>{t(ui_language as any, 'save_btn')}</button>
+          <button className="settings_btn" onClick={on_save}>{t(ui_language || 'zh-CN', 'save_btn')}</button>
         </div>
       </div>
     </div>

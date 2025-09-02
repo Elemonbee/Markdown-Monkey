@@ -257,7 +257,7 @@ function App() {
     try {
       const { invoke } = await import('@tauri-apps/api/core')
       await invoke('watch_start', { dir })
-    } catch {}
+    } catch (_e) { /* ignore */ }
   }
 
   /**
@@ -299,9 +299,9 @@ function App() {
             set_file_list(Array.from(new Set(paths)).sort())
           } catch {}
         })
-      } catch {}
+      } catch (_e) { /* ignore */ }
     })()
-    return () => { try { if (unlisten) unlisten() } catch {} }
+    return () => { try { if (unlisten) unlisten() } catch (_e) { /* ignore */ } }
   }, [workspace_root])
 
   // 预览命中高亮
@@ -744,7 +744,7 @@ function App() {
     const { invoke } = await import('@tauri-apps/api/core')
     const { listen } = await import('@tauri-apps/api/event')
     if (provider !== 'ollama' && (!api_key || api_key.trim() === '')) {
-      window.alert(t(ui_language as any, 'enter_api_key'))
+      window.alert(t(ui_language, 'enter_api_key'))
       return
     }
     if (provider === 'openrouter' && !api_key.trim().startsWith('sk-or-')) {
