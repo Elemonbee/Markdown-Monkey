@@ -120,7 +120,6 @@ async fn delete_path(target: String) -> Result<(), String> {
   Ok(())
 }
 
-use once_cell::sync::Lazy;
 static WATCHER: Lazy<std::sync::Mutex<Option<notify::RecommendedWatcher>>> = Lazy::new(|| std::sync::Mutex::new(None));
 
 // 简易加密存储：使用系统凭据管理器（Windows Credential Manager / macOS Keychain / Secret Service）
