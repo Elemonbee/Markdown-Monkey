@@ -484,7 +484,7 @@ function App() {
     const deco = Decoration.mark({ class: 'mmk-search-hit' })
     matches.forEach(r => builder.add(r.from, r.to, deco))
     return builder.finish()
-  }, [search_query, search_regex, search_case_i, markdown_text, search_idx, find_all_matches])
+  }, [find_all_matches])
 
   const searchHighlightField: StateField<DecorationSet> | null = useMemo(() => {
     if (!searchDecorations) return null
