@@ -1,8 +1,11 @@
 use futures_util::StreamExt;
 use tauri::Emitter;
 use std::path::{Path, PathBuf};
+use std::sync::RwLock;
+use once_cell::sync::Lazy;
 
-static mut WORKSPACE_ROOT: Option<String> = None;
+// 全局工作区根路径（线程安全）
+static WORKSPACE_ROOT: Lazy<RwLock<Option<String>>> = Lazy::new(|| RwLock::new(None));
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -32,7 +35,10 @@ pub fn run() {
       rename_path,
       delete_path,
       watch_start,
-      watch_stop
+      watch_stop,
+      secret_set,
+      secret_get,
+      secret_delete
     ])
     .run(tauri::generate_context!())
     .expect("error while running tauri application");
@@ -62,12 +68,18 @@ async fn list_md_files(dir: String) -> Result<Vec<String>, String> {
 }
 
 fn set_workspace_root(dir: &str) {
-  unsafe { WORKSPACE_ROOT = Some(dir.to_string()); }
+  if let Ok(mut guard) = WORKSPACE_ROOT.write() {
+    *guard = Some(dir.to_string());
+  }
 }
 
 fn ensure_in_workspace(path: &Path) -> Result<(), String> {
   let p = std::fs::canonicalize(path).map_err(|e| e.to_string())?;
-  let root = unsafe { WORKSPACE_ROOT.clone() }.ok_or_else(|| "workspace not set".to_string())?;
+  let root = WORKSPACE_ROOT
+    .read()
+    .map_err(|_| "workspace lock poisoned".to_string())?
+    .clone()
+    .ok_or_else(|| "workspace not set".to_string())?;
   let root_c = std::fs::canonicalize(&root).map_err(|e| e.to_string())?;
   if !p.starts_with(&root_c) {
     return Err("path outside of workspace".to_string());
@@ -110,6 +122,33 @@ async fn delete_path(target: String) -> Result<(), String> {
 
 use once_cell::sync::Lazy;
 static WATCHER: Lazy<std::sync::Mutex<Option<notify::RecommendedWatcher>>> = Lazy::new(|| std::sync::Mutex::new(None));
+
+// 简易加密存储：使用系统凭据管理器（Windows Credential Manager / macOS Keychain / Secret Service）
+#[tauri::command]
+async fn secret_set(service: String, key: String, value: String) -> Result<(), String> {
+  let entry = keyring::Entry::new(&service, &key).map_err(|e| e.to_string())?;
+  entry.set_password(&value).map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+async fn secret_get(service: String, key: String) -> Result<Option<String>, String> {
+  let entry = keyring::Entry::new(&service, &key).map_err(|e| e.to_string())?;
+  match entry.get_password() {
+    Ok(v) => Ok(Some(v)),
+    Err(keyring::Error::NoEntry) => Ok(None),
+    Err(e) => Err(e.to_string()),
+  }
+}
+
+#[tauri::command]
+async fn secret_delete(service: String, key: String) -> Result<(), String> {
+  let entry = keyring::Entry::new(&service, &key).map_err(|e| e.to_string())?;
+  match entry.delete_password() {
+    Ok(()) => Ok(()),
+    Err(keyring::Error::NoEntry) => Ok(()),
+    Err(e) => Err(e.to_string()),
+  }
+}
 
 #[tauri::command]
 async fn watch_start(app: tauri::AppHandle, dir: String) -> Result<(), String> {
