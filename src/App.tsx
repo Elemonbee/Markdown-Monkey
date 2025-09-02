@@ -580,7 +580,13 @@ function App() {
       const s = await Store.load('settings.json')
       store_ref.current = s
       const saved_base = (await s.get<string>('api_base_url')) || 'https://api.openai.com'
-      const saved_key = (await s.get<string>('api_key')) || ''
+      // 从系统 Keyring 读取 API Key（不再从 Store 读取明文）
+      let saved_key = ''
+      try {
+        const { invoke } = await import('@tauri-apps/api/core')
+        const v = await invoke<string | null>('secret_get', { service: 'MarkdownMonkey', key: 'api_key' })
+        saved_key = (v || '') as string
+      } catch {}
       const saved_provider = (await s.get<string>('provider')) || 'openai'
       const saved_model = (await s.get<string>('model')) || 'gpt-4o-mini'
       const saved_system = (await s.get<string>('system_prompt')) || 'You are a helpful assistant for markdown writing.'
@@ -627,7 +633,6 @@ function App() {
   async function handle_save_settings() {
     if (!store_ref.current) return
     await store_ref.current.set('api_base_url', api_base_url)
-    await store_ref.current.set('api_key', api_key)
     await store_ref.current.set('provider', provider)
     await store_ref.current.set('model', model)
     await store_ref.current.set('system_prompt', system_prompt)
@@ -643,6 +648,16 @@ function App() {
     await store_ref.current.set('outline_width', outline_width)
     await store_ref.current.set('recent_ai_actions', recent_ai_actions)
     await store_ref.current.save()
+    // 将 API Key 写入/删除系统 Keyring
+    try {
+      const { invoke } = await import('@tauri-apps/api/core')
+      const k = (api_key || '').trim()
+      if (k) {
+        await invoke('secret_set', { service: 'MarkdownMonkey', key: 'api_key', value: k })
+      } else {
+        await invoke('secret_delete', { service: 'MarkdownMonkey', key: 'api_key' })
+      }
+    } catch {}
     set_show_settings(false)
     apply_theme(ui_theme)
   }
