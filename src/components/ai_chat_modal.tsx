@@ -69,19 +69,19 @@ export default function Ai_chat_modal(props: Ai_chat_modal_props) {
         if (typeof saved_p === 'string') set_chat_provider(saved_p)
         if (typeof saved_m === 'string') set_chat_model(saved_m)
         if (typeof saved_b === 'string') set_chat_base_url(saved_b)
-      } catch (_e) { /* ignore */ }
+      } catch { /* ignore */ }
     }
     init()
   }, [])
 
   // 持久化：消息、输入、位置、最小化状态
-  useEffect(() => { (async () => { try { if (store_ref.current) { await store_ref.current.set('chat_messages', messages); await store_ref.current.save() } } catch (_e) { /* ignore */ } })() }, [messages])
-  useEffect(() => { (async () => { try { if (store_ref.current) { await store_ref.current.set('chat_input', input); await store_ref.current.save() } } catch (_e) { /* ignore */ } })() }, [input])
-  useEffect(() => { (async () => { try { if (store_ref.current) { await store_ref.current.set('chat_pos', pos); await store_ref.current.save() } } catch (_e) { /* ignore */ } })() }, [pos])
-  useEffect(() => { (async () => { try { if (store_ref.current) { await store_ref.current.set('chat_minimized', isMin); await store_ref.current.save() } } catch (_e) { /* ignore */ } })() }, [isMin])
-  useEffect(() => { (async () => { try { if (store_ref.current) { await store_ref.current.set('chat_provider', chat_provider); await store_ref.current.save() } } catch (_e) { /* ignore */ } })() }, [chat_provider])
-  useEffect(() => { (async () => { try { if (store_ref.current) { await store_ref.current.set('chat_model', chat_model); await store_ref.current.save() } } catch (_e) { /* ignore */ } })() }, [chat_model])
-  useEffect(() => { (async () => { try { if (store_ref.current) { await store_ref.current.set('chat_base_url', chat_base_url); await store_ref.current.save() } } catch (_e) { /* ignore */ } })() }, [chat_base_url])
+  useEffect(() => { (async () => { try { if (store_ref.current) { await store_ref.current.set('chat_messages', messages); await store_ref.current.save() } } catch { /* ignore */ } })() }, [messages])
+  useEffect(() => { (async () => { try { if (store_ref.current) { await store_ref.current.set('chat_input', input); await store_ref.current.save() } } catch { /* ignore */ } })() }, [input])
+  useEffect(() => { (async () => { try { if (store_ref.current) { await store_ref.current.set('chat_pos', pos); await store_ref.current.save() } } catch { /* ignore */ } })() }, [pos])
+  useEffect(() => { (async () => { try { if (store_ref.current) { await store_ref.current.set('chat_minimized', isMin); await store_ref.current.save() } } catch { /* ignore */ } })() }, [isMin])
+  useEffect(() => { (async () => { try { if (store_ref.current) { await store_ref.current.set('chat_provider', chat_provider); await store_ref.current.save() } } catch { /* ignore */ } })() }, [chat_provider])
+  useEffect(() => { (async () => { try { if (store_ref.current) { await store_ref.current.set('chat_model', chat_model); await store_ref.current.save() } } catch { /* ignore */ } })() }, [chat_model])
+  useEffect(() => { (async () => { try { if (store_ref.current) { await store_ref.current.set('chat_base_url', chat_base_url); await store_ref.current.save() } } catch { /* ignore */ } })() }, [chat_base_url])
 
   // 根据 provider 自动切换 base_url（仅对聊天生效，不影响全局设置）
   useEffect(() => {
@@ -95,7 +95,7 @@ export default function Ai_chat_modal(props: Ai_chat_modal_props) {
     }
     const d = defaults[chat_provider] || chat_base_url
     set_chat_base_url(d)
-  }, [chat_provider])
+  }, [chat_provider, chat_base_url])
 
   async function handle_fetch_models() {
     set_loading_models(true)
@@ -124,7 +124,7 @@ export default function Ai_chat_modal(props: Ai_chat_modal_props) {
   useEffect(() => {
     if (typeof reset_signal === 'number') {
       set_pos({ x: 80, y: 80 })
-      ;(async () => { try { if (store_ref.current) { await store_ref.current.set('chat_pos', { x: 80, y: 80 }); await store_ref.current.save() } } catch (_e) { /* ignore */ } })()
+      ;(async () => { try { if (store_ref.current) { await store_ref.current.set('chat_pos', { x: 80, y: 80 }); await store_ref.current.save() } } catch { /* ignore */ } })()
     }
   }, [reset_signal])
 
@@ -159,7 +159,7 @@ export default function Ai_chat_modal(props: Ai_chat_modal_props) {
     set_messages((prev) => [...prev, { role: 'assistant', content: '' }])
     set_loading(true)
     abort_ref.current = false
-    try { unsubscribe_ref.current(); } catch (_e) { /* ignore */ }
+    try { unsubscribe_ref.current(); } catch { /* ignore */ }
 
     const { invoke } = await import('@tauri-apps/api/core')
     const { listen } = await import('@tauri-apps/api/event')
@@ -191,7 +191,7 @@ export default function Ai_chat_modal(props: Ai_chat_modal_props) {
           throttling = true
           setTimeout(() => { flush(); throttling = false }, 60)
         }
-      } catch (_e) { /* ignore */ }
+      } catch { /* ignore */ }
     })
     unsubscribe_ref.current = unlisten
 
@@ -323,7 +323,7 @@ export default function Ai_chat_modal(props: Ai_chat_modal_props) {
                   const target = await save({ filters: [{ name: 'JSON', extensions: ['json'] }], defaultPath: 'chat_session.json' })
                   if (!target) return
                   await writeTextFile(target, JSON.stringify({ provider: chat_provider, model: chat_model, base_url: chat_base_url, messages }, null, 2))
-                } catch (_e) { /* ignore */ }
+                } catch { /* ignore */ }
               }}>{t(lang,'export')}</button>
               <button className="settings_btn" onClick={() => set_messages([])}>{t(lang,'clear')}</button>
             </>

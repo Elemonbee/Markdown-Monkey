@@ -1377,7 +1377,7 @@ function App() {
             const content = await readTextFile(p)
             set_markdown_text(content)
             set_current_file_path(p)
-          } catch (e) { window.alert('打开失败'); }
+          } catch { window.alert('打开失败'); }
         }}
         on_save={handle_save_settings}
         on_close={() => set_show_settings(false)}
