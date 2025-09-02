@@ -1,3 +1,4 @@
+![editor](assets/icon.svg)
 # MarkdownMonkey
 
 ![en](https://img.shields.io/badge/lang-English-blue) ![zh](https://img.shields.io/badge/lang-zh--CN-brightgreen) ![Tauri](https://img.shields.io/badge/Tauri-2.x-24C8DB?logo=tauri&logoColor=white) ![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=white) ![TypeScript](https://img.shields.io/badge/TypeScript-5-blue?logo=typescript&logoColor=white) ![Rust](https://img.shields.io/badge/Rust-stable-000?logo=rust&logoColor=white) ![Vite](https://img.shields.io/badge/Vite-7-646CFF?logo=vite&logoColor=white)
@@ -48,9 +49,6 @@ pnpm tauri build
 
 ## Screenshots
 
-<!-- Add your screenshots below (place files under assets/). Example names: -->
-<!-- assets/screenshot-editor.png, assets/screenshot-ai-chat.png -->
-<!-- If the images are not showing on GitHub, ensure the files are committed and pushed. -->
 ![editor](assets/screenshot.png)
 ![ai-chat](assets/screenshot2.png)
 
