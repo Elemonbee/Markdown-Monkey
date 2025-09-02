@@ -422,14 +422,14 @@ function App() {
           const f = files[i]
           if (!f.type || !f.type.startsWith('image/')) continue
           const arr = await f.arrayBuffer()
-          const { writeBinaryFile, createDir } = await import('@tauri-apps/plugin-fs')
+          const { writeFile: writeFsFile, createDir } = await import('@tauri-apps/plugin-fs')
           const pathSep = current_file_path.includes('\\') ? '\\' : '/'
           const dir = current_file_path.split(/[/\\]/).slice(0, -1).join(pathSep)
           const imagesDir = dir + pathSep + 'images'
           try { await createDir(imagesDir, { recursive: true }) } catch {}
           const nameSafe = `pasted_${Date.now()}.png`
           const target = imagesDir + pathSep + nameSafe
-          await writeBinaryFile(target, new Uint8Array(arr))
+          await writeFsFile(target, new Uint8Array(arr))
           const rel = `./images/${nameSafe}`
           const md = `![image](${rel})`
           const view = cm_view_ref.current

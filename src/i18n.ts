@@ -245,8 +245,9 @@ const dict: Record<Lang, Record<string, string>> = {
   }
 }
 
-export function t(lang: Lang, key: string): string {
-  return (dict[lang as Lang] && dict[lang as Lang][key]) || dict['zh-CN'][key] || key
+export function t(lang: Lang | string, key: string): string {
+  const useLang: Lang = (lang === 'en-US' || lang === 'zh-CN') ? lang : 'zh-CN'
+  return (dict[useLang] && dict[useLang][key]) || dict['zh-CN'][key] || key
 }
 
 
