@@ -43,7 +43,7 @@ export default function Context_menu(props: Context_menu_props) {
               <span>{'›'}</span>
             </div>
           ) : (
-            <div key={it.id} className="context_item" onClick={() => { it.on_click && it.on_click(); on_close(); }}>
+            <div key={it.id} className="context_item" onClick={() => { if (it.on_click) it.on_click(); on_close(); }}>
               {it.label}
             </div>
           )
@@ -55,7 +55,7 @@ export default function Context_menu(props: Context_menu_props) {
             sit.id.startsWith('sep') ? (
               <div key={sit.id} className="context_sep" />
             ) : (
-              <div key={sit.id} className="context_item" onClick={() => { sit.on_click && sit.on_click(); set_submenu(null); on_close(); }}>
+              <div key={sit.id} className="context_item" onClick={() => { if (sit.on_click) sit.on_click(); set_submenu(null); on_close(); }}>
                 {sit.label}
               </div>
             )

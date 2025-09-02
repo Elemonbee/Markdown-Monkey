@@ -257,7 +257,7 @@ function App() {
     try {
       const { invoke } = await import('@tauri-apps/api/core')
       await invoke('watch_start', { dir })
-    } catch (_e) { /* ignore */ }
+    } catch { /* ignore */ }
   }
 
   /**
@@ -299,9 +299,9 @@ function App() {
             set_file_list(Array.from(new Set(paths)).sort())
           } catch {}
         })
-      } catch (_e) { /* ignore */ }
+      } catch { /* ignore */ }
     })()
-    return () => { try { if (unlisten) unlisten() } catch (_e) { /* ignore */ } }
+    return () => { try { if (unlisten) unlisten() } catch { /* ignore */ } }
   }, [workspace_root])
 
   // 预览命中高亮
@@ -484,7 +484,7 @@ function App() {
     const deco = Decoration.mark({ class: 'mmk-search-hit' })
     matches.forEach(r => builder.add(r.from, r.to, deco))
     return builder.finish()
-  }, [search_query, search_regex, search_case_i, markdown_text, search_idx])
+  }, [search_query, search_regex, search_case_i, markdown_text, search_idx, find_all_matches])
 
   const searchHighlightField: StateField<DecorationSet> | null = useMemo(() => {
     if (!searchDecorations) return null
@@ -571,7 +571,7 @@ function App() {
     }
     view.scrollDOM.addEventListener('scroll', onScroll)
     return () => view.scrollDOM.removeEventListener('scroll', onScroll)
-  }, [cm_view_ref.current, preview_ref.current])
+  }, [])
 
   // 初始化 store
   useEffect(() => {
