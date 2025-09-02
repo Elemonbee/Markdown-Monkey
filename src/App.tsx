@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState, useCallback } from 'react'
 import './App.css'
 import { t } from './i18n'
 import { marked } from 'marked'
@@ -444,7 +444,7 @@ function App() {
     return () => window.removeEventListener('paste', on_paste as any)
   }, [current_file_path])
 
-  function find_all_matches(docText: string): Array<{ from: number, to: number }> {
+  const find_all_matches = useCallback((docText: string): Array<{ from: number, to: number }> => {
     if (!search_query) return []
     try {
       if (search_regex) {
@@ -473,7 +473,7 @@ function App() {
     } catch {
       return []
     }
-  }
+  }, [search_query, search_regex, search_case_i])
 
   // 高亮命中：构建装饰
   const searchDecorations: DecorationSet | null = useMemo(() => {
@@ -574,20 +574,20 @@ function App() {
   }, [])
 
   // 初始化 store
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+  // 仅初始化一次，读取并应用持久化设置
   useEffect(() => {
     async function init_store() {
       const s = await Store.load('settings.json')
       store_ref.current = s
-      const saved_base = (await s.get<string>('api_base_url')) || api_base_url
+      const saved_base = (await s.get<string>('api_base_url')) || 'https://api.openai.com'
       const saved_key = (await s.get<string>('api_key')) || ''
-      const saved_provider = (await s.get<string>('provider')) || provider
-      const saved_model = (await s.get<string>('model')) || model
-      const saved_system = (await s.get<string>('system_prompt')) || system_prompt
-      const saved_temp = (await s.get<number>('temperature')) || temperature
-      const saved_split = (await s.get<number>('split_ratio')) || split_ratio
-      const saved_editor_fs = (await s.get<number>('editor_font_size')) || editor_font_size
-      const saved_preview_fs = (await s.get<number>('preview_font_size')) || preview_font_size
+      const saved_provider = (await s.get<string>('provider')) || 'openai'
+      const saved_model = (await s.get<string>('model')) || 'gpt-4o-mini'
+      const saved_system = (await s.get<string>('system_prompt')) || 'You are a helpful assistant for markdown writing.'
+      const saved_temp = (await s.get<number>('temperature')) || 0.7
+      const saved_split = (await s.get<number>('split_ratio')) || 0.5
+      const saved_editor_fs = (await s.get<number>('editor_font_size')) || 16
+      const saved_preview_fs = (await s.get<number>('preview_font_size')) || 16
       const saved_ai_enabled = (await s.get<boolean>('ai_enabled'))
       const saved_actions = (await s.get<string[]>('ai_actions_enabled'))
       const saved_custom = (await s.get<any>('ai_custom_templates'))
@@ -609,8 +609,8 @@ function App() {
       const saved_outline_width = (await s.get<number>('outline_width'))
       if (typeof saved_outline_shown === 'boolean') set_show_outline(saved_outline_shown)
       if (typeof saved_outline_width === 'number') set_outline_width(saved_outline_width)
-      const saved_theme = (await s.get<string>('ui_theme')) || ui_theme
-      const saved_lang = (await s.get<string>('ui_language')) || ui_language
+      const saved_theme = (await s.get<string>('ui_theme')) || 'dark'
+      const saved_lang = (await s.get<string>('ui_language')) || 'zh-CN'
       const saved_recent_ai = (await s.get<Array<{ id: string, title: string }>>('recent_ai_actions')) || []
       set_ui_theme(saved_theme)
       set_ui_language(saved_lang)
