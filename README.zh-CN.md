@@ -35,7 +35,7 @@ pnpm tauri dev
 pnpm tauri build
 ```
 
-## 功能清单（详细）
+## 功能清单
 
 - 编辑体验
   - CodeMirror 6 编辑器，Markdown 语法高亮
