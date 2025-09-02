@@ -484,7 +484,7 @@ function App() {
     const deco = Decoration.mark({ class: 'mmk-search-hit' })
     matches.forEach(r => builder.add(r.from, r.to, deco))
     return builder.finish()
-  }, [find_all_matches])
+  }, [find_all_matches, search_query])
 
   const searchHighlightField: StateField<DecorationSet> | null = useMemo(() => {
     if (!searchDecorations) return null
@@ -574,6 +574,7 @@ function App() {
   }, [])
 
   // 初始化 store
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     async function init_store() {
       const s = await Store.load('settings.json')
