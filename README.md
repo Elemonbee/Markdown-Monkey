@@ -15,6 +15,11 @@ Highlights:
 - Local-first: auto save + local history snapshots (latest 20)
 - Export: HTML / PDF (keeps styling and code highlight)
 - i18n: zh-CN and en-US included
+- **New Features**:
+  - Auto-save indicator: Real-time save status display, 3-second auto-save
+  - Command palette (Ctrl+Shift+P): Quick access to all features
+  - Focus mode (F11): Immersive writing experience
+  - Mermaid diagram support: Flowcharts, sequence diagrams, Gantt charts, pie charts, etc.
 
 [中文使用说明](README.zh-CN.md)
 
@@ -41,6 +46,8 @@ pnpm tauri build
   - CodeMirror 6, Markdown highlighting
   - Synced preview, code block highlight, XSS sanitization
   - Paste image into `images/` next to current file and auto insert reference
+  - **Auto-save indicator**: Status bar shows save status (saved/saving/unsaved), 3-second auto-save
+  - **Focus mode**: F11 for immersive writing, hides all UI except editor
 - Sidebar & tabs
   - Outline: header-based TOC, jump to section, adjustable width
   - File tree: recursive md listing, create/rename/delete/refresh/copy path
@@ -55,12 +62,16 @@ pnpm tauri build
   - File system capability-scoped to HOME/DESKTOP by default
 - Export
   - HTML/PDF via html2pdf.js with preserved styles & highlights
+  - **Mermaid diagrams**: Auto-render flowcharts, sequence diagrams, Gantt charts, pie charts, etc., theme-aware
+- Quick Access
+  - **Command palette**: Ctrl+Shift+P to open, search and execute any feature, keyboard navigation support
 - Cross-platform
   - Windows / macOS / Linux (depending on env)
 
 ## Usage
 
 1) Basics
+   - New document: top "New" to create a blank document
    - Open file: top "Open" or drag a `.md` file into window
    - Open folder: top "Open Folder" to list md files in sidebar
    - Tabs: open files become tabs; drag to reorder; context close actions
@@ -86,8 +97,12 @@ pnpm tauri build
 ![ai-chat](assets/screenshot2.png)
 
 ## Shortcuts
+- Ctrl+N: New document
 - Ctrl+O: Open file
 - Ctrl+S: Save
+- Ctrl+F: Search/Replace
+- Ctrl+Shift+P: Command palette
+- F11: Focus mode (press again or ESC to exit)
 - Ctrl+P: (planned) Quick open
 - Ctrl+Shift+F: (planned) Global search
 

@@ -49,22 +49,129 @@ body {
   display: flex;
   flex-direction: column;
 }
-/* 让编辑器内部承载滚动条，避免必须滚到页面底部才能左右滚动 */
-.pane-editor { overflow: hidden; display: flex; flex-direction: column; min-height: 0; height: 100%; }
-.pane-editor .cm-editor { flex: 1 1 auto; min-height: 0; }
-.pane-editor .cm-scroller { overflow: auto; height: 100%; }
+/* 让编辑器内部承载滚动条 */
+.pane-editor { 
+  overflow: hidden; 
+  display: flex; 
+  flex-direction: column; 
+  min-height: 0; 
+  height: 100%; 
+}
 
-/* 固定在编辑区底部的水平滚动条代理，保证随时可见 */
-/* 还原为最初更简洁的滚动条实现 */
-/* 让滚动条槽与内容对齐，避免被父容器遮挡 */
-.pane-editor .cm-scroller { width: 100%; }
-/* 严格约束整条高度链，确保横向滚动条总在视窗内 */
-.pane-editor,
-.pane-editor > div,
-.pane-editor .cm-editor,
-.pane-editor .cm-scroller { min-height: 0 !important; }
-/* 始终保留底部水平滚动条空间 */
-/* 依赖稳定滚动槽，避免手动 padding 影响高度计算 */
+.pane-editor .cm-editor { 
+  flex: 1 1 auto; 
+  min-height: 0; 
+  max-height: 100%;
+  height: 100%;
+  overflow: hidden; /* 防止编辑器本身产生滚动条 */
+}
+
+/* 确保 CodeMirror 的根元素高度受限 */
+.pane-editor > div {
+  height: 100%;
+  max-height: 100%;
+  overflow: hidden;
+}
+
+/* 滚动条设置 - 根据内容自动显示 */
+.pane-editor .cm-scroller { 
+  overflow-y: auto !important; /* 根据内容自动显示垂直滚动条 */
+  overflow-x: auto !important; /* 根据内容自动显示水平滚动条 */
+  height: 100% !important; 
+  width: 100%;
+  /* 标准滚动条属性 - 灰色滑块 */
+  scrollbar-width: auto !important;
+  scrollbar-color: #888 #2a2a2a !important;
+}
+
+/* 编辑器容器内的所有滚动条 - 使用更高优先级选择器 */
+.editor-container .cm-scroller::-webkit-scrollbar {
+  width: 14px !important;
+  height: 14px !important;
+  display: block !important;
+  visibility: visible !important;
+}
+
+.editor-container .cm-scroller::-webkit-scrollbar-track {
+  background: #2a2a2a !important;
+  border: 1px solid #3a3a3a !important;
+  display: block !important;
+}
+
+.editor-container .cm-scroller::-webkit-scrollbar-thumb {
+  background: #888 !important;
+  border: 1px solid #999 !important;
+  border-radius: 2px !important;
+  min-height: 30px !important;
+  display: block !important;
+}
+
+.editor-container .cm-scroller::-webkit-scrollbar-thumb:hover {
+  background: #aaa !important;
+}
+
+.editor-container .cm-scroller::-webkit-scrollbar-corner {
+  background: #2a2a2a !important;
+}
+
+/* 全局滚动条样式 - 灰色滑块 */
+::-webkit-scrollbar {
+  width: 14px;
+  height: 14px;
+}
+
+::-webkit-scrollbar-track {
+  background: #1a1a1a;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #888;
+  border: 1px solid #999;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #aaa;
+}
+
+/* 确保编辑器内容可以水平滚动 */
+.pane-editor .cm-content {
+  /* 暂时移除 min-width 以避免冲突 */
+  /* min-width: max-content; */
+}
+
+/* 强制 CodeMirror 显示滚动条 */
+.cm-editor .cm-scroller {
+  overflow: scroll !important;
+}
+
+/* 预览面板滚动条 */
+.pane-preview::-webkit-scrollbar {
+  width: 14px;
+  height: 14px;
+}
+
+.pane-preview::-webkit-scrollbar-track {
+  background: #1a1a1a;
+}
+
+.pane-preview::-webkit-scrollbar-thumb {
+  background: #555;
+  border: 1px solid #666;
+}
+
+/* 大纲面板滚动条 */
+.pane-outline::-webkit-scrollbar {
+  width: 14px;
+}
+
+.pane-outline::-webkit-scrollbar-track {
+  background: #1a1a1a;
+}
+
+.pane-outline::-webkit-scrollbar-thumb {
+  background: #555;
+  border: 1px solid #666;
+}
 
 /* 预览面板也允许内部滚动 */
 .pane-preview { min-height: 0; overflow: auto; }
@@ -290,4 +397,162 @@ body {
   width: 120px;
   color: #cfcfcf;
   font-size: 13px;
+}
+
+/* 命令面板样式 */
+.command_palette {
+  position: fixed;
+  top: 20%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 600px;
+  max-width: 90vw;
+  max-height: 60vh;
+  background: var(--panel, #1a1a1a);
+  border: 1px solid #3a3a3a;
+  border-radius: 10px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.8);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.command_palette_header {
+  padding: 0;
+  border-bottom: 1px solid #2a2a2a;
+}
+
+.command_palette_input {
+  width: 100%;
+  padding: 16px 20px;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: #fff;
+  font-size: 16px;
+}
+
+.command_palette_input::placeholder {
+  color: #888;
+}
+
+.command_palette_list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px 0;
+}
+
+.command_palette_item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 20px;
+  cursor: pointer;
+  transition: background 0.1s;
+}
+
+.command_palette_item:hover,
+.command_palette_item.selected {
+  background: rgba(255,255,255,0.1);
+}
+
+.command_palette_label {
+  color: #eaeaea;
+  font-size: 14px;
+}
+
+.command_palette_shortcut {
+  color: #888;
+  font-size: 12px;
+  background: rgba(255,255,255,0.1);
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.command_palette_empty {
+  padding: 20px;
+  text-align: center;
+  color: #888;
+}
+
+/* 专注模式样式 */
+.container.focus-mode {
+  grid-template-rows: 0px 1fr 0px !important;
+}
+
+.container.focus-mode .pane-editor {
+  padding: 40px;
+  max-width: 900px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.container.focus-mode .cm-editor {
+  font-size: 18px;
+  line-height: 1.8;
+}
+
+.container.focus-mode .cm-scroller {
+  padding: 20px;
+}
+
+/* 专注模式提示 */
+.focus-mode-hint {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  background: rgba(0,0,0,0.8);
+  color: #888;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 12px;
+  opacity: 0;
+  animation: fadeInOut 3s ease-in-out;
+  pointer-events: none;
+  z-index: 10000;
+}
+
+@keyframes fadeInOut {
+  0% { opacity: 0; }
+  20% { opacity: 1; }
+  80% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+/* Mermaid 图表样式 */
+.mermaid-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+  background: var(--panel, #1a1a1a);
+  border-radius: 8px;
+  margin: 16px 0;
+  overflow: auto;
+}
+
+.mermaid-container svg {
+  max-width: 100%;
+  height: auto;
+}
+
+/* 亮色主题下的 Mermaid 样式 */
+.light .mermaid-container {
+  background: #f5f5f5;
+}
+
+.light .mermaid-container text {
+  fill: #333 !important;
+}
+
+.light .mermaid-container .node rect,
+.light .mermaid-container .node circle,
+.light .mermaid-container .node ellipse,
+.light .mermaid-container .node polygon {
+  fill: #fff !important;
+  stroke: #333 !important;
+}
+
+.light .mermaid-container .edgePath path {
+  stroke: #333 !important;
 }

@@ -1,7 +1,7 @@
 {
   "name": "markdownmonkey",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.1.1",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -27,6 +27,7 @@
     "html2pdf.js": "^0.12.0",
     "jspdf": "^3.0.2",
     "marked": "^16.2.1",
+    "mermaid": "^11.11.0",
     "react": "^19.1.1",
     "react-dom": "^19.1.1"
   },

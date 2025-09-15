@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState, useCallback } from 'react'
 import './App.css'
 import { t } from './i18n'
+import mermaid from 'mermaid'
 import { marked } from 'marked'
 import DOMPurify from 'dompurify'
 import hljs from 'highlight.js'
@@ -20,6 +21,7 @@ import Context_menu from './components/context_menu'
 import Ai_result_modal from './components/ai_result_modal'
 // import Outline_modal from './components/outline_modal'
 import Ai_chat_modal from './components/ai_chat_modal'
+import CommandPalette from './components/command_palette'
 
 /**
  * App
@@ -97,6 +99,11 @@ function App() {
   const [recent_ai_actions, set_recent_ai_actions] = useState<Array<{ id: string, title: string }>>([])
   const [show_ai_chat, set_show_ai_chat] = useState<boolean>(false)
   const [chat_reset_tick, set_chat_reset_tick] = useState<number>(0)
+  const [save_status, set_save_status] = useState<'saved' | 'saving' | 'unsaved'>('saved')
+  const [last_saved_time, set_last_saved_time] = useState<Date | null>(null)
+  const [show_command_palette, set_show_command_palette] = useState<boolean>(false)
+  const [focus_mode, set_focus_mode] = useState<boolean>(false)
+  const [show_focus_hint, set_show_focus_hint] = useState<boolean>(false)
   const [show_search, set_show_search] = useState<boolean>(false)
   const [search_query, set_search_query] = useState<string>('')
   const [replace_query, set_replace_query] = useState<string>('')
@@ -236,6 +243,8 @@ function App() {
       set_markdown_text(content)
       set_current_file_path(path)
       set_open_tabs((prev) => prev.includes(path) ? prev : [...prev, path])
+      set_save_status('saved')
+      set_last_saved_time(new Date())
     } catch (e) { console.error(e) }
   }
 
@@ -262,19 +271,49 @@ function App() {
 
   /**
    * compute_rendered_html
-   * 根据当前 markdown 文本计算并更新 HTML 预览
+   * 根据当前 markdown 文本计算并更新 HTML 预览，支持 Mermaid 图表
    */
-  function compute_rendered_html(md_text: string) {
+  async function compute_rendered_html(md_text: string) {
     const parsed = marked.parse(md_text)
-    if (typeof parsed === 'string') {
-      const sanitized_html = DOMPurify.sanitize(parsed, { USE_PROFILES: { html: true, svg: true, svgFilters: true } })
-      set_rendered_html(sanitized_html)
-    } else {
-      parsed.then((html) => {
-        const sanitized_html = DOMPurify.sanitize(html, { USE_PROFILES: { html: true, svg: true, svgFilters: true } })
-        set_rendered_html(sanitized_html)
-      })
+    let html = typeof parsed === 'string' ? parsed : await parsed
+    
+    // 处理 Mermaid 代码块
+    const mermaidRegex = /<pre><code class="language-mermaid">([\s\S]*?)<\/code><\/pre>/g
+    const mermaidBlocks: string[] = []
+    let match
+    
+    while ((match = mermaidRegex.exec(html)) !== null) {
+      mermaidBlocks.push(match[1])
     }
+    
+    // 渲染 Mermaid 图表
+    for (let i = 0; i < mermaidBlocks.length; i++) {
+      const graphDefinition = mermaidBlocks[i]
+        .replace(/&lt;/g, '<')
+        .replace(/&gt;/g, '>')
+        .replace(/&amp;/g, '&')
+        .replace(/&quot;/g, '"')
+        .replace(/&#39;/g, "'")
+      
+      try {
+        const id = `mermaid-${Date.now()}-${i}`
+        const { svg } = await mermaid.render(id, graphDefinition)
+        html = html.replace(
+          `<pre><code class="language-mermaid">${mermaidBlocks[i]}</code></pre>`,
+          `<div class="mermaid-container">${svg}</div>`
+        )
+      } catch (error) {
+        console.error('Mermaid rendering error:', error)
+        // 如果渲染失败，保留原始代码块
+      }
+    }
+    
+    const sanitized_html = DOMPurify.sanitize(html, { 
+      USE_PROFILES: { html: true, svg: true, svgFilters: true },
+      ADD_TAGS: ['svg', 'g', 'path', 'rect', 'circle', 'text', 'line', 'polyline', 'polygon', 'ellipse', 'defs', 'marker', 'style'],
+      ADD_ATTR: ['viewBox', 'preserveAspectRatio', 'xmlns', 'width', 'height', 'd', 'fill', 'stroke', 'stroke-width', 'transform', 'cx', 'cy', 'r', 'x', 'y', 'points', 'marker-end', 'marker-start', 'id', 'class', 'style']
+    })
+    set_rendered_html(sanitized_html)
   }
 
   useEffect(() => {
@@ -417,6 +456,25 @@ function App() {
     }, history_interval_ms)
     return () => { if (autosave_timer_ref.current) clearInterval(autosave_timer_ref.current) }
   }, [history_enabled, history_interval_ms, markdown_text, current_file_path, model, provider])
+
+  // 自动保存到文件
+  useEffect(() => {
+    const timer = setTimeout(async () => {
+      if (markdown_text && current_file_path && save_status === 'unsaved') {
+        set_save_status('saving')
+        try {
+          await writeTextFile(current_file_path, markdown_text)
+          set_save_status('saved')
+          set_last_saved_time(new Date())
+        } catch (error) {
+          console.error('Auto-save failed:', error)
+          set_save_status('unsaved')
+        }
+      }
+    }, 3000) // 3秒后自动保存
+    
+    return () => clearTimeout(timer)
+  }, [markdown_text, current_file_path, save_status])
 
   // 粘贴图片 -> 保存并插入
   useEffect(() => {
@@ -582,6 +640,16 @@ function App() {
 
   // 初始化 store
   // 仅初始化一次，读取并应用持久化设置
+  // 初始化 Mermaid
+  useEffect(() => {
+    mermaid.initialize({
+      startOnLoad: false,
+      theme: ui_theme === 'dark' ? 'dark' : 'default',
+      securityLevel: 'loose',
+      fontFamily: 'monospace'
+    })
+  }, [ui_theme])
+
   useEffect(() => {
     async function init_store() {
       const s = await Store.load('settings.json')
@@ -685,6 +753,82 @@ function App() {
     apply_theme(ui_theme)
   }, [ui_theme])
 
+  // 快捷键监听
+  useEffect(() => {
+    const handle_keydown = (e: KeyboardEvent) => {
+      if (e.ctrlKey && e.key === 's') {
+        e.preventDefault()
+        handle_save_file()
+      } else if (e.ctrlKey && e.key === 'o') {
+        e.preventDefault()
+        handle_open_file()
+      } else if (e.ctrlKey && e.key === 'n') {
+        e.preventDefault()
+        // 新建文档
+        set_markdown_text('')
+        set_current_file_path('')
+        set_save_status('unsaved')
+        set_last_saved_time(null)
+        const view = cm_view_ref.current
+        if (view) { view.focus() }
+      } else if (e.ctrlKey && e.shiftKey && e.key === 'P') {
+        e.preventDefault()
+        set_show_command_palette(true)
+      } else if (e.key === 'F11') {
+        e.preventDefault()
+        set_focus_mode(!focus_mode)
+      } else if (e.key === 'Escape' && focus_mode) {
+        e.preventDefault()
+        set_focus_mode(false)
+      }
+    }
+    window.addEventListener('keydown', handle_keydown)
+    return () => window.removeEventListener('keydown', handle_keydown)
+  }, [current_file_path, markdown_text, focus_mode])
+
+  // 专注模式提示
+  useEffect(() => {
+    if (focus_mode) {
+      set_show_focus_hint(true)
+      const timer = setTimeout(() => set_show_focus_hint(false), 3000)
+      return () => clearTimeout(timer)
+    }
+  }, [focus_mode])
+
+  // 当文件路径或内容改变时，重新应用滚动条样式
+  useEffect(() => {
+    // 延迟执行以确保 DOM 更新完成
+    const timer = setTimeout(() => {
+      if (cm_view_ref.current) {
+        const scroller = cm_view_ref.current.dom.querySelector('.cm-scroller')
+        if (scroller) {
+          const scrollerEl = scroller as HTMLElement
+          
+          // 先移除样式，强制重新计算
+          scrollerEl.removeAttribute('style')
+          
+          // 强制重排
+          void scrollerEl.offsetHeight
+          
+          // 重新应用滚动条样式
+          scrollerEl.style.cssText = `
+            overflow: auto !important;
+            overflow-y: auto !important;
+            overflow-x: auto !important;
+            height: 100% !important;
+            width: 100% !important;
+            scrollbar-width: auto !important;
+            scrollbar-color: #888 #2a2a2a !important;
+          `
+          
+          // 滚动条样式已应用
+        }
+      }
+    }, 200)
+    
+    return () => clearTimeout(timer)
+  }, [current_file_path, markdown_text])
+
   /**
    * handle_open_file
    * 打开 Markdown 文件
@@ -726,7 +870,15 @@ function App() {
       await handle_save_as()
       return
     }
-    await writeTextFile(current_file_path, markdown_text)
+    set_save_status('saving')
+    try {
+      await writeTextFile(current_file_path, markdown_text)
+      set_save_status('saved')
+      set_last_saved_time(new Date())
+    } catch (error) {
+      console.error('Save failed:', error)
+      set_save_status('unsaved')
+    }
   }
 
   /**
@@ -1049,14 +1201,16 @@ function App() {
   }
 
   return (
-    <div className="container" ref={container_ref} style={{ gridTemplateColumns: `${show_outline ? outline_width : 0}px 6px ${Math.round(split_ratio*100)}% 6px ${100 - Math.round(split_ratio*100)}%` }}>
-      <div className="settings_bar" style={{ gridColumn: '1 / -1' }}>
+    <div className={`container ${focus_mode ? 'focus-mode' : ''}`} ref={container_ref} style={{ gridTemplateColumns: focus_mode ? '0px 0px 100% 0px 0px' : `${show_outline ? outline_width : 0}px 6px ${Math.round(split_ratio*100)}% 6px ${100 - Math.round(split_ratio*100)}%` }}>
+      <div className="settings_bar" style={{ gridColumn: '1 / -1', display: focus_mode ? 'none' : 'flex' }}>
         <img src={monkeyIcon} alt="MarkdownMonkey" style={{ width: 22, height: 22, alignSelf: 'center' }} />
         <button className="settings_btn" onClick={handle_open_file}>{t(ui_language, 'open')}</button>
         <button className="settings_btn" onClick={() => {
           // 新建空白文档：仅清空编辑器与当前路径，首次保存时再命名
           set_markdown_text('')
           set_current_file_path('')
+          set_save_status('unsaved')
+          set_last_saved_time(null)
           // 将焦点置于编辑器
           const view = cm_view_ref.current
           if (view) { view.focus() }
@@ -1189,7 +1343,7 @@ function App() {
           <button className="settings_btn" style={{ display: 'block', width: 180, textAlign: 'left' }} onClick={() => { set_tab_ctx_open(false); const path = tab_ctx_path; if (!path) return; const base = path.split(/[/\\]/).slice(0, -1).join('/'); set_workspace_root(base); set_side_tab('files') }}>{t(ui_language, 'locate_in_tree')}</button>
         </div>
       )}
-      {show_outline && (
+      {show_outline && !focus_mode && (
         <div className="pane pane-outline" style={{ width: outline_width }}>
           <div className="sidebar_tabs">
             <button className={`tab_button ${side_tab==='outline'?'active':''}`} onClick={() => set_side_tab('outline')}>{t(ui_language, 'tab_outline')}</button>
@@ -1342,34 +1496,101 @@ function App() {
           set_ctx_open(true)
           set_ctx_pos({ x: e.clientX, y: e.clientY })
         }}>
-        <div style={{ display: 'flex', flexDirection: 'column', minHeight: 0, height: '100%' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', minHeight: 0, height: '100%', overflow: 'hidden' }} className="editor-container">
         <CodeMirror
           value={markdown_text}
             theme={ui_theme === 'light' ? undefined : oneDark}
-            height="100%" // 使内部 scroller 有固定高度
+            height="calc(100vh - 120px)" // 使用视口高度减去顶部和底部栏的高度
+            style={{ height: '100%', maxHeight: 'calc(100vh - 120px)' }}
             basicSetup={{ scrollPastEnd: true }}
             extensions={[
               markdown(),
-              ...(searchHighlightField ? [searchHighlightField] : [])
+              ...(searchHighlightField ? [searchHighlightField] : []),
+              // 强制显示滚动条的主题扩展
+              EditorView.theme({
+                '.cm-scroller': {
+                  overflow: 'scroll !important',
+                  scrollbarWidth: 'auto',
+                  scrollbarColor: '#888 #2a2a2a'
+                },
+                '.cm-scroller::-webkit-scrollbar': {
+                  width: '14px !important',
+                  height: '14px !important'
+                },
+                '.cm-scroller::-webkit-scrollbar-track': {
+                  background: '#2a2a2a !important',
+                  border: '1px solid #3a3a3a !important'
+                },
+                '.cm-scroller::-webkit-scrollbar-thumb': {
+                  background: '#888 !important',
+                  border: '1px solid #999 !important',
+                  borderRadius: '2px !important'
+                },
+                '.cm-scroller::-webkit-scrollbar-thumb:hover': {
+                  background: '#aaa !important'
+                },
+                '.cm-scroller::-webkit-scrollbar-corner': {
+                  background: '#2a2a2a !important'
+                }
+              })
             ]}
-          onChange={(value) => set_markdown_text(value)}
-            onCreateEditor={(view) => { cm_view_ref.current = view }}
+          onChange={(value) => {
+            set_markdown_text(value)
+            if (current_file_path && value !== markdown_text) {
+              set_save_status('unsaved')
+            }
+          }}
+            onCreateEditor={(view) => { 
+              cm_view_ref.current = view
+              // 设置滚动条样式
+              setTimeout(() => {
+                const scroller = view.dom.querySelector('.cm-scroller')
+                if (scroller) {
+                  const scrollerEl = scroller as HTMLElement
+                  
+                  // 使用 auto 而不是 scroll，让滚动条根据内容自动显示
+                  scrollerEl.setAttribute('style', `
+                    overflow: auto !important;
+                    overflow-y: auto !important;
+                    overflow-x: auto !important;
+                    height: 100% !important;
+                    width: 100% !important;
+                    scrollbar-width: auto !important;
+                    scrollbar-color: #888 #2a2a2a !important;
+                  `)
+                  
+                  // 滚动条样式已应用
+                }
+              }, 100)
+            }}
         />
+      </div>
+      </div>
+      {!focus_mode && <div className="splitter" onMouseDown={handle_splitter_down} />}
+      {!focus_mode && (
+        <div className="pane pane-preview" style={{ fontSize: preview_font_size }}>
+          <div
+            ref={preview_ref}
+            className="preview_html markdown_body"
+            dangerouslySetInnerHTML={{ __html: rendered_html }}
+          />
         </div>
-      </div>
-      <div className="splitter" onMouseDown={handle_splitter_down} />
-      <div className="pane pane-preview" style={{ fontSize: preview_font_size }}>
-        <div
-          ref={preview_ref}
-          className="preview_html markdown_body"
-          dangerouslySetInnerHTML={{ __html: rendered_html }}
-        />
-      </div>
-      <div className="status_bar">
+      )}
+      <div className="status_bar" style={{ display: focus_mode ? 'none' : 'flex' }}>
         <div className="status_item">{t(ui_language, 'words')}: {status_stats.words}</div>
         <div className="status_item">{t(ui_language, 'chars')}: {status_stats.chars}</div>
         <div className="status_item">{t(ui_language, 'read_time')}: ~{status_stats.minutes} {ui_language==='en-US'?'min':'分钟'}</div>
         <div style={{ flex: 1 }} />
+        <div className="status_item save_indicator">
+          {save_status === 'saved' && <span style={{ color: '#4caf50' }}>● {ui_language === 'en-US' ? 'Saved' : '已保存'}</span>}
+          {save_status === 'saving' && <span style={{ color: '#ff9800' }}>● {ui_language === 'en-US' ? 'Saving...' : '保存中...'}</span>}
+          {save_status === 'unsaved' && <span style={{ color: '#f44336' }}>● {ui_language === 'en-US' ? 'Unsaved' : '未保存'}</span>}
+          {last_saved_time && save_status === 'saved' && (
+            <span style={{ marginLeft: 8, opacity: 0.7, fontSize: '0.9em' }}>
+              {last_saved_time.toLocaleTimeString()}
+            </span>
+          )}
+        </div>
         <div className="status_item" title={current_file_path}>{current_file_path || t(ui_language, 'unsaved')}</div>
       </div>
       <Settings_modal
@@ -1514,6 +1735,64 @@ function App() {
           view.dispatch({ changes: { from: sel.from, to: sel.to, insert: text }, scrollIntoView: true })
         }}
       />
+      <CommandPalette
+        is_open={show_command_palette}
+        commands={[
+          { id: 'new', label: t(ui_language, 'new_file'), shortcut: 'Ctrl+N', action: () => {
+            set_markdown_text('')
+            set_current_file_path('')
+            set_save_status('unsaved')
+            set_last_saved_time(null)
+          }},
+          { id: 'open', label: t(ui_language, 'open'), shortcut: 'Ctrl+O', action: handle_open_file },
+          { id: 'save', label: t(ui_language, 'save'), shortcut: 'Ctrl+S', action: handle_save_file },
+          { id: 'save_as', label: t(ui_language, 'save_as'), action: handle_save_as },
+          { id: 'export_html', label: t(ui_language, 'export_html'), action: async () => {
+            const html = generate_html()
+            const selected = await save({ filters: [{ name: 'HTML', extensions: ['html'] }] })
+            if (typeof selected === 'string') {
+              await writeTextFile(selected, html)
+            }
+          }},
+          { id: 'export_pdf', label: t(ui_language, 'export_pdf'), action: async () => {
+            const html = generate_html()
+            const html2pdf = (window as any).html2pdf
+            if (!html2pdf) return
+            const opt = {
+              margin: 10,
+              filename: current_file_path ? current_file_path.replace(/\.md$/, '.pdf') : 'document.pdf',
+              image: { type: 'jpeg', quality: 0.98 },
+              html2canvas: { scale: 2 },
+              jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            }
+            html2pdf().set(opt).from(html).save()
+          }},
+          { id: 'settings', label: t(ui_language, 'settings'), action: () => set_show_settings(true) },
+          { id: 'search', label: t(ui_language, 'search_replace'), shortcut: 'Ctrl+F', action: () => set_show_search(true) },
+          { id: 'ai_chat', label: t(ui_language, 'ai_chat'), action: () => set_show_ai_chat(true) },
+          { id: 'toggle_outline', label: show_outline ? t(ui_language, 'hide_outline') : t(ui_language, 'show_outline'), action: () => set_show_outline(!show_outline) },
+          { id: 'toggle_theme', label: ui_language === 'en-US' ? 'Toggle Theme' : '切换主题', action: () => {
+            const themes = ['dark', 'light', 'system'] as const
+            const current_index = themes.indexOf(ui_theme)
+            const next_theme = themes[(current_index + 1) % themes.length]
+            set_ui_theme(next_theme)
+            apply_theme(next_theme)
+          }},
+          { id: 'toggle_language', label: ui_language === 'en-US' ? 'Switch to Chinese' : '切换到英文', action: () => {
+            set_ui_language(ui_language === 'en-US' ? 'zh-CN' : 'en-US')
+          }},
+          { id: 'focus_mode', label: focus_mode ? (ui_language === 'en-US' ? 'Exit Focus Mode' : '退出专注模式') : (ui_language === 'en-US' ? 'Enter Focus Mode' : '进入专注模式'), shortcut: 'F11', action: () => {
+            set_focus_mode(!focus_mode)
+          }}
+        ]}
+        ui_language={ui_language}
+        on_close={() => set_show_command_palette(false)}
+      />
+      {show_focus_hint && (
+        <div className="focus-mode-hint">
+          {ui_language === 'en-US' ? 'Press ESC or F11 to exit focus mode' : '按 ESC 或 F11 退出专注模式'}
+        </div>
+      )}
     </div>
   )
 }
