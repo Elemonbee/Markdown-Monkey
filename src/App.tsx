@@ -1350,23 +1350,12 @@ function App() {
             basicSetup={{ scrollPastEnd: true }}
             extensions={[
               markdown(),
-              EditorView.theme({
-                '.cm-content': { whiteSpace: 'pre' }
-              }),
               ...(searchHighlightField ? [searchHighlightField] : [])
             ]}
           onChange={(value) => set_markdown_text(value)}
             onCreateEditor={(view) => { cm_view_ref.current = view }}
         />
-        <div className="hscrollbar_proxy" onScroll={(e) => {
-          try {
-            const scroller = document.querySelector('.pane-editor .cm-scroller') as HTMLElement | null
-            if (scroller) { scroller.scrollLeft = (e.target as HTMLElement).scrollLeft }
-          } catch {}
-        }}>
-          <div style={{ width: '200%' }} />
-      </div>
-      </div>
+        </div>
       </div>
       <div className="splitter" onMouseDown={handle_splitter_down} />
       <div className="pane pane-preview" style={{ fontSize: preview_font_size }}>
