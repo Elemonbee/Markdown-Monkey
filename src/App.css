@@ -50,9 +50,12 @@ body {
   flex-direction: column;
 }
 /* 让编辑器内部承载滚动条，避免必须滚到页面底部才能左右滚动 */
-.pane-editor { overflow: auto; display: flex; flex-direction: column; min-height: 0; }
-.pane-editor .cm-editor { flex: 1; min-height: 0; height: 100%; }
+.pane-editor { overflow: hidden; display: flex; flex-direction: column; min-height: 0; }
+.pane-editor .cm-editor { flex: 1; min-height: 0; height: 100%; overflow: hidden; }
 .pane-editor .cm-scroller { overflow-x: auto; overflow-y: auto; height: 100%; overscroll-behavior: contain; scrollbar-gutter: stable both-edges; }
+/* 始终保留底部水平滚动条空间 */
+.pane-editor .cm-scroller::-webkit-scrollbar:horizontal { height: 12px; }
+.pane-editor .cm-scroller { padding-bottom: 12px; box-sizing: content-box; }
 
 /* 预览面板也允许内部滚动 */
 .pane-preview { min-height: 0; }

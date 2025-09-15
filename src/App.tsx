@@ -1343,22 +1343,23 @@ function App() {
           set_ctx_pos({ x: e.clientX, y: e.clientY })
         }}>
         <div style={{ display: 'flex', flexDirection: 'column', minHeight: 0, height: '100%' }}>
-          <CodeMirror
-            value={markdown_text}
+        <CodeMirror
+          value={markdown_text}
             theme={ui_theme === 'light' ? undefined : oneDark}
-            height="100%"
+            height="100%" // 使内部 scroller 有固定高度
             basicSetup={{ scrollPastEnd: true }}
             extensions={[
               markdown(),
               EditorView.theme({
                 '.cm-content': { minWidth: 'max-content' },
+                '.cm-scroller': { contain: 'size layout style', overflow: 'auto' },
               }),
               ...(searchHighlightField ? [searchHighlightField] : [])
             ]}
-            onChange={(value) => set_markdown_text(value)}
+          onChange={(value) => set_markdown_text(value)}
             onCreateEditor={(view) => { cm_view_ref.current = view }}
-          />
-        </div>
+        />
+      </div>
       </div>
       <div className="splitter" onMouseDown={handle_splitter_down} />
       <div className="pane pane-preview" style={{ fontSize: preview_font_size }}>
