@@ -188,7 +188,7 @@ function App() {
    * apply_theme
    * 根据 ui_theme 应用主题到 html[data-theme]
    */
-  function apply_theme(theme: string) {
+  function apply_theme(theme: 'dark' | 'light' | 'system') {
     if (theme === 'system') {
       if (!media_query_ref.current) {
         media_query_ref.current = window.matchMedia('(prefers-color-scheme: dark)')
@@ -1776,7 +1776,7 @@ function App() {
             const current_index = themes.indexOf(ui_theme)
             const next_theme = themes[(current_index + 1) % themes.length]
             set_ui_theme(next_theme)
-            apply_theme(next_theme as 'dark' | 'light' | 'system')
+            apply_theme(next_theme)
           }},
           { id: 'toggle_language', label: ui_language === 'en-US' ? 'Switch to Chinese' : '切换到英文', action: () => {
             set_ui_language(ui_language === 'en-US' ? 'zh-CN' : 'en-US')
