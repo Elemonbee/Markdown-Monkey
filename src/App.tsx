@@ -1350,6 +1350,9 @@ function App() {
             basicSetup={{ scrollPastEnd: true }}
             extensions={[
               markdown(),
+              EditorView.theme({
+                '.cm-content': { whiteSpace: 'pre' }
+              }),
               ...(searchHighlightField ? [searchHighlightField] : [])
             ]}
           onChange={(value) => set_markdown_text(value)}
