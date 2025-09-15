@@ -1502,7 +1502,7 @@ function App() {
             theme={ui_theme === 'light' ? undefined : oneDark}
             height="calc(100vh - 120px)" // 使用视口高度减去顶部和底部栏的高度
             style={{ height: '100%', maxHeight: 'calc(100vh - 120px)' }}
-            basicSetup={{ scrollPastEnd: true }}
+            basicSetup={true}
             extensions={[
               markdown(),
               ...(searchHighlightField ? [searchHighlightField] : []),
@@ -1748,14 +1748,14 @@ function App() {
           { id: 'save', label: t(ui_language, 'save'), shortcut: 'Ctrl+S', action: handle_save_file },
           { id: 'save_as', label: t(ui_language, 'save_as'), action: handle_save_as },
           { id: 'export_html', label: t(ui_language, 'export_html'), action: async () => {
-            const html = generate_html()
+            const html = `<!doctype html><html><head><meta charset="utf-8"/><title>${(current_file_path||'').split(/[/\\]/).pop()||'Document'}</title><style>body{font-family:system-ui,Segoe UI,Roboto,Helvetica,Arial;max-width:840px;margin:24px auto;padding:0 16px;line-height:1.7;} pre{background:#0b0b0b;color:#f3f3f3;padding:12px;border-radius:6px;overflow:auto;} code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;} h1,h2,h3{margin:1.2em 0 .6em}</style></head><body class="markdown_body">${rendered_html}</body></html>`
             const selected = await save({ filters: [{ name: 'HTML', extensions: ['html'] }] })
             if (typeof selected === 'string') {
               await writeTextFile(selected, html)
             }
           }},
           { id: 'export_pdf', label: t(ui_language, 'export_pdf'), action: async () => {
-            const html = generate_html()
+            const html = `<!doctype html><html><head><meta charset="utf-8"/><title>${(current_file_path||'').split(/[/\\]/).pop()||'Document'}</title><style>body{font-family:system-ui,Segoe UI,Roboto,Helvetica,Arial;max-width:840px;margin:24px auto;padding:0 16px;line-height:1.7;} pre{background:#0b0b0b;color:#f3f3f3;padding:12px;border-radius:6px;overflow:auto;} code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;} h1,h2,h3{margin:1.2em 0 .6em}</style></head><body class="markdown_body">${rendered_html}</body></html>`
             const html2pdf = (window as any).html2pdf
             if (!html2pdf) return
             const opt = {
@@ -1776,7 +1776,7 @@ function App() {
             const current_index = themes.indexOf(ui_theme)
             const next_theme = themes[(current_index + 1) % themes.length]
             set_ui_theme(next_theme)
-            apply_theme(next_theme)
+            apply_theme(next_theme as 'dark' | 'light' | 'system')
           }},
           { id: 'toggle_language', label: ui_language === 'en-US' ? 'Switch to Chinese' : '切换到英文', action: () => {
             set_ui_language(ui_language === 'en-US' ? 'zh-CN' : 'en-US')
