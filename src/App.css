@@ -45,13 +45,17 @@ body {
   height: 100%;
   overflow: auto;
   min-width: 0;
+  min-height: 0; /* 关键：允许网格子项内部滚动 */
   display: flex;
   flex-direction: column;
 }
 /* 让编辑器内部承载滚动条，避免必须滚到页面底部才能左右滚动 */
-.pane-editor { overflow: hidden; display: flex; flex-direction: column; }
+.pane-editor { overflow: hidden; display: flex; flex-direction: column; min-height: 0; }
 .pane-editor .cm-editor { flex: 1; min-height: 0; }
-.pane-editor .cm-scroller { overflow: auto; height: 100%; }
+.pane-editor .cm-scroller { overflow: auto; height: 100%; overscroll-behavior: contain; }
+
+/* 预览面板也允许内部滚动 */
+.pane-preview { min-height: 0; }
 
 .splitter {
   width: 6px;

@@ -279,8 +279,15 @@ function App() {
 
   useEffect(() => {
     compute_rendered_html(markdown_text)
-    const chars = markdown_text.length
-    const words = (markdown_text.match(/\S+/g) || []).length
+    // 更准确的中英文混排统计：
+    // 字符：排除空白符
+    const chars = (markdown_text.replace(/\s+/g, '')).length
+    // 词数：
+    // - 英文按单词分割
+    // - 中文/日文/韩文等东亚表意文按字符统计
+    const englishWords = (markdown_text.match(/[A-Za-z0-9_]+(?:'[A-Za-z0-9_]+)?/g) || []).length
+    const cjkChars = (markdown_text.match(/[\u4E00-\u9FFF\u3040-\u309F\u30A0-\u30FF\uAC00-\uD7AF]/g) || []).length
+    const words = englishWords + cjkChars
     const minutes = Math.max(1, Math.round(words / 200))
     set_status_stats({ chars, words, minutes })
   }, [markdown_text])
@@ -1046,22 +1053,13 @@ function App() {
       <div className="settings_bar" style={{ gridColumn: '1 / -1' }}>
         <img src={monkeyIcon} alt="MarkdownMonkey" style={{ width: 22, height: 22, alignSelf: 'center' }} />
         <button className="settings_btn" onClick={handle_open_file}>{t(ui_language, 'open')}</button>
-        <button className="settings_btn" onClick={async () => {
-          try {
-            const base = workspace_root || ''
-            const name = window.prompt(t(ui_language, 'new_file') + ' (.md)', 'untitled.md')
-            if (!name) return
-            const full = (base ? base.replace(/\\/g,'/') + '/' : '') + name
-            const { invoke } = await import('@tauri-apps/api/core')
-            await invoke('create_empty_file', { path: full })
-            if (base) {
-              try {
-                const paths = await invoke<string[]>('list_md_files', { dir: base })
-                set_file_list(Array.from(new Set(paths)).sort())
-              } catch { /* ignore */ }
-            }
-            await open_file_at(full)
-          } catch (e) { alert('新建失败：' + e) }
+        <button className="settings_btn" onClick={() => {
+          // 新建空白文档：仅清空编辑器与当前路径，首次保存时再命名
+          set_markdown_text('')
+          set_current_file_path('')
+          // 将焦点置于编辑器
+          const view = cm_view_ref.current
+          if (view) { view.focus() }
         }}>{t(ui_language, 'new_file')}</button>
         <button className="settings_btn" onClick={handle_open_folder}>{t(ui_language, 'open_folder')}</button>
         <button className="settings_btn" onClick={handle_save_file}>{current_file_path ? t(ui_language, 'save') : t(ui_language, 'save_as')}</button>
