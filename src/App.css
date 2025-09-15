@@ -48,6 +48,9 @@ body {
   display: flex;
   flex-direction: column;
 }
+/* 让编辑器内部承载滚动条，避免必须滚到页面底部才能左右滚动 */
+.pane-editor { overflow: hidden; }
+.pane-editor .cm-scroller { overflow: auto; }
 
 .splitter {
   width: 6px;

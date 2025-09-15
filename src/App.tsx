@@ -1046,6 +1046,23 @@ function App() {
       <div className="settings_bar" style={{ gridColumn: '1 / -1' }}>
         <img src={monkeyIcon} alt="MarkdownMonkey" style={{ width: 22, height: 22, alignSelf: 'center' }} />
         <button className="settings_btn" onClick={handle_open_file}>{t(ui_language, 'open')}</button>
+        <button className="settings_btn" onClick={async () => {
+          try {
+            const base = workspace_root || ''
+            const name = window.prompt(t(ui_language, 'new_file') + ' (.md)', 'untitled.md')
+            if (!name) return
+            const full = (base ? base.replace(/\\/g,'/') + '/' : '') + name
+            const { invoke } = await import('@tauri-apps/api/core')
+            await invoke('create_empty_file', { path: full })
+            if (base) {
+              try {
+                const paths = await invoke<string[]>('list_md_files', { dir: base })
+                set_file_list(Array.from(new Set(paths)).sort())
+              } catch { /* ignore */ }
+            }
+            await open_file_at(full)
+          } catch (e) { alert('新建失败：' + e) }
+        }}>{t(ui_language, 'new_file')}</button>
         <button className="settings_btn" onClick={handle_open_folder}>{t(ui_language, 'open_folder')}</button>
         <button className="settings_btn" onClick={handle_save_file}>{current_file_path ? t(ui_language, 'save') : t(ui_language, 'save_as')}</button>
         <button className="settings_btn" onClick={() => set_show_settings(true)}>{t(ui_language, 'settings')}</button>
