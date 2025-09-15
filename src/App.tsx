@@ -67,7 +67,7 @@ function App() {
   const is_dragging_ref = useRef<boolean>(false)
   const [editor_font_size, set_editor_font_size] = useState<number>(16)
   const [preview_font_size, set_preview_font_size] = useState<number>(16)
-  const [ui_theme, set_ui_theme] = useState<string>('dark')
+  const [ui_theme, set_ui_theme] = useState<'dark' | 'light' | 'system'>('dark')
   const [ui_language, set_ui_language] = useState<string>('zh-CN')
   const media_query_ref = useRef<MediaQueryList | null>(null)
   const [ai_enabled, set_ai_enabled] = useState<boolean>(false)
@@ -690,7 +690,7 @@ function App() {
       const saved_outline_width = (await s.get<number>('outline_width'))
       if (typeof saved_outline_shown === 'boolean') set_show_outline(saved_outline_shown)
       if (typeof saved_outline_width === 'number') set_outline_width(saved_outline_width)
-      const saved_theme = (await s.get<string>('ui_theme')) || 'dark'
+      const saved_theme = (await s.get<'dark' | 'light' | 'system'>('ui_theme')) || 'dark'
       const saved_lang = (await s.get<string>('ui_language')) || 'zh-CN'
       const saved_recent_ai = (await s.get<Array<{ id: string, title: string }>>('recent_ai_actions')) || []
       set_ui_theme(saved_theme)
