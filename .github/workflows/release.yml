@@ -24,7 +24,9 @@ jobs:
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
       - name: Install Tauri CLI
-        run: pnpm dlx tauri@latest -v
+        run: pnpm dlx @tauri-apps/cli@^2 -v
+      - name: Install WiX Toolset (for MSI)
+        run: choco install wixtoolset --no-progress -y
       - name: Build app (tauri)
         run: pnpm run tauri:build
       - name: Upload artifacts
