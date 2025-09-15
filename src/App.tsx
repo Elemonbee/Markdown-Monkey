@@ -1350,10 +1350,6 @@ function App() {
             basicSetup={{ scrollPastEnd: true }}
             extensions={[
               markdown(),
-              EditorView.theme({
-                '.cm-content': { minWidth: 'max-content' },
-                '.cm-scroller': { contain: 'size layout style', overflow: 'auto' },
-              }),
               ...(searchHighlightField ? [searchHighlightField] : [])
             ]}
           onChange={(value) => set_markdown_text(value)}
