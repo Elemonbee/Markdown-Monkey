@@ -1342,14 +1342,17 @@ function App() {
           set_ctx_open(true)
           set_ctx_pos({ x: e.clientX, y: e.clientY })
         }}>
-        <CodeMirror
-          value={markdown_text}
-          theme={ui_theme === 'light' ? undefined : oneDark}
-          height="100%"
-          extensions={[markdown(), ...(searchHighlightField ? [searchHighlightField] : [])]}
-          onChange={(value) => set_markdown_text(value)}
-          onCreateEditor={(view) => { cm_view_ref.current = view }}
-        />
+        <div style={{ display: 'flex', flexDirection: 'column', minHeight: 0, height: '100%' }}>
+          <CodeMirror
+            value={markdown_text}
+            theme={ui_theme === 'light' ? undefined : oneDark}
+            height="100%"
+            basicSetup={{ scrollPastEnd: true }}
+            extensions={[markdown(), ...(searchHighlightField ? [searchHighlightField] : [])]}
+            onChange={(value) => set_markdown_text(value)}
+            onCreateEditor={(view) => { cm_view_ref.current = view }}
+          />
+        </div>
       </div>
       <div className="splitter" onMouseDown={handle_splitter_down} />
       <div className="pane pane-preview" style={{ fontSize: preview_font_size }}>
