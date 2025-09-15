@@ -42,15 +42,16 @@ body {
 }
 
 .pane {
-  height: auto;
+  height: 100%;
   overflow: auto;
   min-width: 0;
   display: flex;
   flex-direction: column;
 }
 /* 让编辑器内部承载滚动条，避免必须滚到页面底部才能左右滚动 */
-.pane-editor { overflow: hidden; }
-.pane-editor .cm-scroller { overflow: auto; }
+.pane-editor { overflow: hidden; display: flex; flex-direction: column; }
+.pane-editor .cm-editor { flex: 1; min-height: 0; }
+.pane-editor .cm-scroller { overflow: auto; height: 100%; }
 
 .splitter {
   width: 6px;
