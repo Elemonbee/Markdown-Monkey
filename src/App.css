@@ -51,7 +51,7 @@ body {
 }
 /* 让编辑器内部承载滚动条，避免必须滚到页面底部才能左右滚动 */
 .pane-editor { overflow: hidden; display: flex; flex-direction: column; min-height: 0; height: 100%; }
-.pane-editor .cm-editor { flex: 1 1 auto; min-height: 0; height: 100% !important; overflow: hidden; }
+.pane-editor .cm-editor { flex: 1 1 auto; min-height: 0; overflow: hidden; }
 .pane-editor .cm-scroller {
   overflow-x: auto;
   overflow-y: auto;
@@ -60,6 +60,17 @@ body {
   overscroll-behavior: contain;
   scrollbar-gutter: stable both-edges; /* 确保横向滚动条常驻可见 */
   width: 100%;
+}
+
+/* 固定在编辑区底部的水平滚动条代理，保证随时可见 */
+.hscrollbar_proxy {
+  height: 14px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-gutter: stable;
+  position: sticky;
+  bottom: 0;
+  background: #0f0f0f;
 }
 /* 让滚动条槽与内容对齐，避免被父容器遮挡 */
 .pane-editor .cm-scroller { width: 100%; }
