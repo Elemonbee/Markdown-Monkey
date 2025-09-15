@@ -23,8 +23,9 @@ jobs:
         run: pnpm install --frozen-lockfile
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
-      - name: Install Tauri CLI
-        run: pnpm dlx @tauri-apps/cli@^2 -v
+      - name: Ensure Tauri CLI
+        shell: bash
+        run: pnpm exec tauri -v || pnpm dlx @tauri-apps/cli@^2 -v
       - name: Install WiX Toolset (for MSI)
         run: choco install wixtoolset --no-progress -y
       - name: Build app (tauri)
