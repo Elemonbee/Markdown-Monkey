@@ -52,7 +52,7 @@ body {
 /* 让编辑器内部承载滚动条，避免必须滚到页面底部才能左右滚动 */
 .pane-editor { overflow: auto; display: flex; flex-direction: column; min-height: 0; }
 .pane-editor .cm-editor { flex: 1; min-height: 0; height: 100%; }
-.pane-editor .cm-scroller { overflow-x: auto; overflow-y: auto; height: 100%; overscroll-behavior: contain; }
+.pane-editor .cm-scroller { overflow-x: auto; overflow-y: auto; height: 100%; overscroll-behavior: contain; scrollbar-gutter: stable both-edges; }
 
 /* 预览面板也允许内部滚动 */
 .pane-preview { min-height: 0; }

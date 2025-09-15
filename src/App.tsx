@@ -1348,7 +1348,13 @@ function App() {
             theme={ui_theme === 'light' ? undefined : oneDark}
             height="100%"
             basicSetup={{ scrollPastEnd: true }}
-            extensions={[markdown(), ...(searchHighlightField ? [searchHighlightField] : [])]}
+            extensions={[
+              markdown(),
+              EditorView.theme({
+                '.cm-content': { minWidth: 'max-content' },
+              }),
+              ...(searchHighlightField ? [searchHighlightField] : [])
+            ]}
             onChange={(value) => set_markdown_text(value)}
             onCreateEditor={(view) => { cm_view_ref.current = view }}
           />
