@@ -50,9 +50,9 @@ body {
   flex-direction: column;
 }
 /* 让编辑器内部承载滚动条，避免必须滚到页面底部才能左右滚动 */
-.pane-editor { overflow: auto; display: flex; flex-direction: column; min-height: 0; height: 100%; scrollbar-gutter: stable both-edges; }
+.pane-editor { overflow: hidden; display: flex; flex-direction: column; min-height: 0; height: 100%; }
 .pane-editor .cm-editor { flex: 1 1 auto; min-height: 0; height: 100% !important; overflow: hidden; }
-.pane-editor .cm-scroller { overflow-x: scroll; overflow-y: scroll; height: 100% !important; max-height: 100% !important; overscroll-behavior: contain; scrollbar-gutter: stable both-edges; }
+.pane-editor .cm-scroller { overflow-x: auto; overflow-y: auto; height: 100% !important; max-height: 100% !important; overscroll-behavior: contain; scrollbar-gutter: stable; width: 100%; }
 /* 让滚动条槽与内容对齐，避免被父容器遮挡 */
 .pane-editor .cm-scroller { width: 100%; }
 /* 严格约束整条高度链，确保横向滚动条总在视窗内 */
