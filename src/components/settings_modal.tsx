@@ -22,8 +22,8 @@ type Settings_modal_props = {
   set_preview_font_size: (v: number) => void
   ui_language?: string
   set_ui_language?: (v: string) => void
-  ui_theme?: string
-  set_ui_theme?: (v: string) => void
+  ui_theme?: 'dark' | 'light' | 'system'
+  set_ui_theme?: (v: 'dark' | 'light' | 'system') => void
   ai_actions_enabled: string[]
   set_ai_actions_enabled: (v: string[]) => void
   ai_custom_templates: Array<{ id: string, title: string, body: string, scope: 'selection' | 'document', enabled: boolean, vars?: { lang?: string, style?: string } }>
@@ -183,7 +183,7 @@ export default function Settings_modal(props: Settings_modal_props) {
               </div>
               <div className="form_row">
                 <label className="form_label">{t(ui_language || 'zh-CN', 'theme')}</label>
-                <select className="settings_input" value={ui_theme} onChange={(e) => set_ui_theme && set_ui_theme(e.target.value)}>
+                <select className="settings_input" value={ui_theme} onChange={(e) => set_ui_theme && set_ui_theme(e.target.value as 'dark' | 'light' | 'system')}>
                   <option value="dark">{t(ui_language as any, 'theme_dark')}</option>
                   <option value="light">{t(ui_language as any, 'theme_light')}</option>
                   <option value="system">{t(ui_language as any, 'theme_system')}</option>
