@@ -1,5 +1,5 @@
 use futures_util::StreamExt;
-use tauri::Emitter;
+use tauri::{Emitter, Manager};
 use std::path::{Path, PathBuf};
 use std::sync::RwLock;
 use once_cell::sync::Lazy;
@@ -9,11 +9,40 @@ static WORKSPACE_ROOT: Lazy<RwLock<Option<String>>> = Lazy::new(|| RwLock::new(N
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
+  // 获取命令行参数
+  let args: Vec<String> = std::env::args().collect();
+  
   tauri::Builder::default()
     .plugin(tauri_plugin_store::Builder::new().build())
     .plugin(tauri_plugin_dialog::init())
     .plugin(tauri_plugin_fs::init())
-    .setup(|app| {
+    .plugin(tauri_plugin_single_instance::init(|app, args, _cwd| {
+      // 当尝试打开第二个实例时，会调用这个回调
+      // args 是新实例的命令行参数
+      if args.len() > 1 {
+        let file_path = args[1].clone();
+        if file_path.ends_with(".md") || file_path.ends_with(".markdown") {
+          // 转换为绝对路径并规范化路径分隔符
+          let abs_path = if std::path::Path::new(&file_path).is_absolute() {
+            file_path.replace('\\', "/")
+          } else {
+            std::env::current_dir()
+              .ok()
+              .and_then(|cwd| cwd.join(&file_path).canonicalize().ok())
+              .and_then(|p| p.to_str().map(|s| s.replace('\\', "/")))
+              .unwrap_or_else(|| file_path.replace('\\', "/"))
+          };
+          // 发送事件到前端打开文件
+          app.emit("open-file", abs_path).ok();
+        }
+      }
+      // 聚焦到已有窗口
+      if let Some(window) = app.get_webview_window("main") {
+        window.show().ok();
+        window.set_focus().ok();
+      }
+    }))
+    .setup(move |app| {
       if cfg!(debug_assertions) {
         app.handle().plugin(
           tauri_plugin_log::Builder::default()
@@ -21,8 +50,36 @@ pub fn run() {
             .build(),
         )?;
       }
-      // 启动文件系统监听任务（按需启动）
-      // 初始化一次，实际监听在命令中启动
+      
+      // 处理初始命令行参数（如果有传入文件路径）
+      if args.len() > 1 {
+        let file_path = args[1].clone();
+        // 验证是否为 .md 文件
+        if file_path.ends_with(".md") || file_path.ends_with(".markdown") {
+          // 转换为绝对路径并规范化路径分隔符
+          let abs_path = if std::path::Path::new(&file_path).is_absolute() {
+            file_path.replace('\\', "/")
+          } else {
+            std::env::current_dir()
+              .ok()
+              .and_then(|cwd| cwd.join(&file_path).canonicalize().ok())
+              .and_then(|p| p.to_str().map(|s| s.replace('\\', "/")))
+              .unwrap_or_else(|| file_path.replace('\\', "/"))
+          };
+          
+          // 发送事件到前端，让前端打开这个文件
+          let app_handle = app.handle().clone();
+          let path_to_open = abs_path.clone();
+          
+          // 延迟发送事件，确保前端已准备好
+          tauri::async_runtime::spawn(async move {
+            // 使用异步延迟，确保前端已准备好
+            tokio::time::sleep(tokio::time::Duration::from_millis(2000)).await;
+            app_handle.emit("open-file", path_to_open).ok();
+          });
+        }
+      }
+      
       Ok(())
     })
     .invoke_handler(tauri::generate_handler![

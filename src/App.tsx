@@ -10,6 +10,7 @@ import { Store } from '@tauri-apps/plugin-store'
 const monkeyIcon = new URL('../assets/icon.svg', import.meta.url).href
 import { open, save } from '@tauri-apps/plugin-dialog'
 import { readTextFile, writeTextFile, writeFile } from '@tauri-apps/plugin-fs'
+import { listen } from '@tauri-apps/api/event'
 import CodeMirror from '@uiw/react-codemirror'
 import { EditorView, Decoration } from '@codemirror/view'
 import type { DecorationSet } from '@codemirror/view'
@@ -119,6 +120,8 @@ function App() {
   const [tab_ctx_open, set_tab_ctx_open] = useState<boolean>(false)
   const [tab_ctx_pos, set_tab_ctx_pos] = useState<{x:number,y:number}>({x:0,y:0})
   const [tab_ctx_path, set_tab_ctx_path] = useState<string>('')
+  const [untitled_counter, set_untitled_counter] = useState<number>(1) // 用于生成未命名文档的编号
+  const [untitled_docs, set_untitled_docs] = useState<Record<string, string>>({}) // 保存未命名文档的内容
   // const auto_refresh_timer_ref = useRef<any>(null)
 
   /**
@@ -127,6 +130,11 @@ function App() {
    */
   function file_display_name(p: string): string {
     if (!p) return ''
+    // 处理未命名文档
+    if (p.startsWith('untitled:')) {
+      const num = p.replace('untitled:', '')
+      return `Untitled-${num}`
+    }
     // 先尝试以 / 或 \\ 分割
     const seg = p.split(/[/\\]/)
     const tail = seg[seg.length - 1]
@@ -137,13 +145,21 @@ function App() {
 
   // 确保当前打开文件总在标签栏里，且避免把工作区路径误当作标签
   useEffect(() => {
-    const isFile = typeof current_file_path === 'string' && /\.(md|markdown)$/i.test(current_file_path)
-    if (!isFile) return
-    set_open_tabs((prev) => {
-      const cleaned = prev.filter((t) => t && t !== workspace_root)
-      if (cleaned.includes(current_file_path)) return cleaned
-      return [...cleaned, current_file_path]
-    })
+    // 如果是真实文件路径
+    if (current_file_path && /\.(md|markdown)$/i.test(current_file_path)) {
+      set_open_tabs((prev) => {
+        const cleaned = prev.filter((t) => t && t !== workspace_root)
+        if (cleaned.includes(current_file_path)) return cleaned
+        return [...cleaned, current_file_path]
+      })
+    }
+    // 如果是未命名文档（以 untitled: 开头）
+    else if (current_file_path && current_file_path.startsWith('untitled:')) {
+      set_open_tabs((prev) => {
+        if (prev.includes(current_file_path)) return prev
+        return [...prev, current_file_path]
+      })
+    }
   }, [current_file_path, workspace_root])
 
   /**
@@ -153,11 +169,31 @@ function App() {
   async function switch_to_tab(path: string) {
     if (!path) return
     if (current_file_path === path) return
-    try {
-      const content = await readTextFile(path)
+    
+    // 保存当前未命名文档的内容
+    if (current_file_path && current_file_path.startsWith('untitled:')) {
+      set_untitled_docs(prev => ({
+        ...prev,
+        [current_file_path]: markdown_text
+      }))
+    }
+    
+    // 如果是未命名文档，从内存中读取
+    if (path.startsWith('untitled:')) {
+      const content = untitled_docs[path] || ''
       set_markdown_text(content)
       set_current_file_path(path)
-    } catch (e) { console.error(e) }
+      set_save_status('unsaved')
+      set_last_saved_time(null)
+    } else {
+      try {
+        const content = await readTextFile(path)
+        set_markdown_text(content)
+        set_current_file_path(path)
+        set_save_status('saved')
+        set_last_saved_time(new Date())
+      } catch (e) { console.error(e) }
+    }
   }
 
   /**
@@ -165,6 +201,15 @@ function App() {
    * 关闭标签；若关闭的是当前标签，则切换到相邻一个标签或清空。
    */
   async function close_tab(path: string) {
+    // 如果是未命名文档，清理内存中的内容
+    if (path.startsWith('untitled:')) {
+      set_untitled_docs(prev => {
+        const next = { ...prev }
+        delete next[path]
+        return next
+      })
+    }
+    
     set_open_tabs((prev) => {
       const idx = prev.indexOf(path)
       const nextTabs = prev.filter((p) => p !== path)
@@ -313,7 +358,7 @@ function App() {
       ADD_TAGS: ['svg', 'g', 'path', 'rect', 'circle', 'text', 'line', 'polyline', 'polygon', 'ellipse', 'defs', 'marker', 'style'],
       ADD_ATTR: ['viewBox', 'preserveAspectRatio', 'xmlns', 'width', 'height', 'd', 'fill', 'stroke', 'stroke-width', 'transform', 'cx', 'cy', 'r', 'x', 'y', 'points', 'marker-end', 'marker-start', 'id', 'class', 'style']
     })
-    set_rendered_html(sanitized_html)
+      set_rendered_html(sanitized_html)
   }
 
   useEffect(() => {
@@ -638,6 +683,69 @@ function App() {
     return () => view.scrollDOM.removeEventListener('scroll', onScroll)
   }, [])
 
+  // 监听从命令行参数打开文件的事件
+  useEffect(() => {
+    const unlisten = listen<string>('open-file', async (event) => {
+      const filePath = event.payload
+      if (filePath && (filePath.endsWith('.md') || filePath.endsWith('.markdown'))) {
+        try {
+          // 规范化路径（将反斜杠转换为正斜杠）
+          const normalizedPath = filePath.replace(/\\/g, '/')
+          
+          const content = await readTextFile(normalizedPath)
+          
+          // 如果当前是未命名文档且内容为空，直接替换；否则添加新标签
+          if (current_file_path && current_file_path.startsWith('untitled:') && !markdown_text) {
+            // 替换当前的空白未命名文档
+            set_markdown_text(content)
+            set_current_file_path(normalizedPath)
+            set_save_status('saved')
+            set_last_saved_time(new Date())
+            // 更新标签栏
+            set_open_tabs((prev) => {
+              const idx = prev.indexOf(current_file_path)
+              if (idx >= 0) {
+                const next = [...prev]
+                next[idx] = normalizedPath
+                return next
+              }
+              return [...prev, normalizedPath]
+            })
+          } else {
+            // 添加新标签
+            set_markdown_text(content)
+            set_current_file_path(normalizedPath)
+            set_save_status('saved')
+            set_last_saved_time(new Date())
+            set_open_tabs((prev) => {
+              if (prev.includes(normalizedPath)) return prev
+              return [...prev, normalizedPath]
+            })
+          }
+        } catch {
+          // 尝试使用原始路径作为备选
+          try {
+            const content = await readTextFile(filePath)
+            set_markdown_text(content)
+            set_current_file_path(filePath)
+            set_save_status('saved')
+            set_last_saved_time(new Date())
+            set_open_tabs((prev) => {
+              if (prev.includes(filePath)) return prev
+              return [...prev, filePath]
+            })
+          } catch {
+            // 文件无法读取，静默处理
+          }
+        }
+      }
+    })
+    
+    return () => {
+      unlisten.then(fn => fn())
+    }
+  }, [current_file_path, markdown_text])
+
   // 初始化 store
   // 仅初始化一次，读取并应用持久化设置
   // 初始化 Mermaid
@@ -765,8 +873,10 @@ function App() {
       } else if (e.ctrlKey && e.key === 'n') {
         e.preventDefault()
         // 新建文档
+        const untitled_name = `untitled:${untitled_counter}`
+        set_untitled_counter(prev => prev + 1)
         set_markdown_text('')
-        set_current_file_path('')
+        set_current_file_path(untitled_name)
         set_save_status('unsaved')
         set_last_saved_time(null)
         const view = cm_view_ref.current
@@ -866,13 +976,14 @@ function App() {
    * 保存到当前文件（如无则等同另存为）
    */
   async function handle_save_file() {
-    if (!current_file_path) {
+    // 如果是未命名文档，转为另存为
+    if (!current_file_path || current_file_path.startsWith('untitled:')) {
       await handle_save_as()
       return
     }
     set_save_status('saving')
     try {
-      await writeTextFile(current_file_path, markdown_text)
+    await writeTextFile(current_file_path, markdown_text)
       set_save_status('saved')
       set_last_saved_time(new Date())
     } catch (error) {
@@ -888,11 +999,33 @@ function App() {
   async function handle_save_as() {
     const target = await save({
       filters: [{ name: 'Markdown', extensions: ['md'] }],
-      defaultPath: current_file_path || 'untitled.md',
+      defaultPath: current_file_path && !current_file_path.startsWith('untitled:') 
+        ? current_file_path 
+        : 'untitled.md',
     })
     if (!target) return
+    
+    // 保存文件
     await writeTextFile(target, markdown_text)
+    
+    // 如果之前是未命名文档，需要更新标签栏
+    const old_path = current_file_path
+    if (old_path && old_path.startsWith('untitled:')) {
+      // 从标签栏中移除旧的未命名标签，添加新的文件路径
+      set_open_tabs((prev) => {
+        const idx = prev.indexOf(old_path)
+        if (idx >= 0) {
+          const next = [...prev]
+          next[idx] = target
+          return next
+        }
+        return [...prev, target]
+      })
+    }
+    
     set_current_file_path(target)
+    set_save_status('saved')
+    set_last_saved_time(new Date())
   }
 
   /**
@@ -1206,9 +1339,11 @@ function App() {
         <img src={monkeyIcon} alt="MarkdownMonkey" style={{ width: 22, height: 22, alignSelf: 'center' }} />
         <button className="settings_btn" onClick={handle_open_file}>{t(ui_language, 'open')}</button>
         <button className="settings_btn" onClick={() => {
-          // 新建空白文档：仅清空编辑器与当前路径，首次保存时再命名
+          // 新建空白文档：创建一个未命名的标签
+          const untitled_name = `untitled:${untitled_counter}`
+          set_untitled_counter(prev => prev + 1)
           set_markdown_text('')
-          set_current_file_path('')
+          set_current_file_path(untitled_name)
           set_save_status('unsaved')
           set_last_saved_time(null)
           // 将焦点置于编辑器
@@ -1569,12 +1704,12 @@ function App() {
       {!focus_mode && <div className="splitter" onMouseDown={handle_splitter_down} />}
       {!focus_mode && (
         <div className="pane pane-preview" style={{ fontSize: preview_font_size }}>
-          <div
-            ref={preview_ref}
-            className="preview_html markdown_body"
-            dangerouslySetInnerHTML={{ __html: rendered_html }}
-          />
-        </div>
+        <div
+          ref={preview_ref}
+          className="preview_html markdown_body"
+          dangerouslySetInnerHTML={{ __html: rendered_html }}
+        />
+      </div>
       )}
       <div className="status_bar" style={{ display: focus_mode ? 'none' : 'flex' }}>
         <div className="status_item">{t(ui_language, 'words')}: {status_stats.words}</div>
@@ -1739,8 +1874,10 @@ function App() {
         is_open={show_command_palette}
         commands={[
           { id: 'new', label: t(ui_language, 'new_file'), shortcut: 'Ctrl+N', action: () => {
+            const untitled_name = `untitled:${untitled_counter}`
+            set_untitled_counter(prev => prev + 1)
             set_markdown_text('')
-            set_current_file_path('')
+            set_current_file_path(untitled_name)
             set_save_status('unsaved')
             set_last_saved_time(null)
           }},
