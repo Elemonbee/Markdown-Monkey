@@ -5,6 +5,8 @@
 
 一个基于 Tauri（Rust）+ React/TypeScript 的现代化 Markdown 桌面编辑器，聚焦“写作效率 + 安全 + 本地优先”。
 
+> 本项目为 Vibe Coding 项目，所有代码由 AI 生成。
+
 核心特性：
 - 实时预览与代码高亮：marked + DOMPurify + highlight.js，预览与编辑同步滚动，高亮命中支持编辑区与预览区一致显示
 - 可拖拽分栏：编辑区/预览区宽度拖拽，侧栏（大纲/文件树）支持独立拖拽与折叠
@@ -24,7 +26,6 @@
 
 [English Guide](README.md)
 
-> 本项目为 Vibe Coding 项目，所有代码由 AI 生成。
 
  
 
