@@ -11,11 +11,13 @@ All notable changes to MarkdownMonkey will be documented in this file.
 - **Fixed New Document Tab Issue**: Creating a new document now properly creates a new tab (Untitled-1, Untitled-2, etc.) instead of replacing the current document. Multiple unsaved documents can now be opened simultaneously.
 - **Fixed File Association**: Fixed the issue where .md files couldn't be opened by double-clicking or using "Open with" context menu. The application now properly handles command-line arguments and supports single-instance mode.
 - **Code Quality Improvements**: Removed all debug console.log statements and println! calls for production-ready code.
+ - **ESLint/Linter Fixes**: Replaced implicit `any`, added missing hook dependencies, and tightened types for safer builds.
 
 #### 中文
 - **修复新建文档标签问题**：新建文档现在会正确创建新标签（Untitled-1、Untitled-2 等），而不是替换当前文档。支持同时打开多个未保存的文档。
 - **修复文件关联问题**：修复了无法通过双击或"打开方式"菜单打开 .md 文件的问题。应用程序现在能正确处理命令行参数并支持单实例模式。
 - **代码质量改进**：移除了所有调试用的 console.log 语句和 println! 调用，使代码更适合生产环境。
+ - **ESLint 修复**：替换隐式 `any`、补齐缺失的 Hook 依赖、收紧类型，确保更严谨的构建。
 
 ### 🔧 Technical Details / 技术细节
 
