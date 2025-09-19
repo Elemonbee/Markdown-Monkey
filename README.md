@@ -20,6 +20,7 @@ Highlights:
   - Command palette (Ctrl+Shift+P): Quick access to all features
   - Focus mode (F11): Immersive writing experience
   - Mermaid diagram support: Flowcharts, sequence diagrams, Gantt charts, pie charts, etc.
+  - Demo: See [Feature Demos](demo-features.en.md)
 
 [中文使用说明](README.zh-CN.md)
 
@@ -94,7 +95,7 @@ pnpm tauri build
 ## Screenshots
 
 ![editor](assets/screenshot.png)
-![ai-chat](assets/screenshot2.png)
+![ai-chat](assets/screenshotEN.png)
 
 ## Shortcuts
 - Ctrl+N: New document

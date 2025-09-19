@@ -20,6 +20,7 @@
   - 命令面板（Ctrl+Shift+P）：快速访问所有功能
   - 专注模式（F11）：沉浸式写作体验
   - Mermaid 图表支持：流程图、时序图、甘特图、饼图等
+  - 示例演示：参见 [功能演示文档](demo-features.md)（中文） / [Feature Demos](demo-features.en.md)（English）
 
 [English Guide](README.md)
 
@@ -98,7 +99,7 @@ pnpm tauri build
 
 <!-- 将实际截图放入 assets/ 目录并提交。以下为占位路径。 -->
 ![editor](assets/screenshot.png)
-![ai-chat](assets/screenshot2.png)
+![ai-chat](assets/screenshotZH.png)
 
 ## 快捷键
 - Ctrl+N：新建文档

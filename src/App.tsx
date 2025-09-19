@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState, useCallback } from 'react'
+import type React from 'react'
 import './App.css'
 import { t } from './i18n'
 import mermaid from 'mermaid'
@@ -8,7 +9,7 @@ import hljs from 'highlight.js'
 import 'highlight.js/styles/github-dark.css'
 import { Store } from '@tauri-apps/plugin-store'
 const monkeyIcon = new URL('../assets/icon.svg', import.meta.url).href
-import { open, save } from '@tauri-apps/plugin-dialog'
+import { open, save, type OpenDialogOptions } from '@tauri-apps/plugin-dialog'
 import { readTextFile, writeTextFile, writeFile } from '@tauri-apps/plugin-fs'
 import { listen } from '@tauri-apps/api/event'
 import CodeMirror from '@uiw/react-codemirror'
@@ -28,8 +29,7 @@ import CommandPalette from './components/command_palette'
  * App
  * 应用主组件：左侧 Markdown 编辑，右侧 HTML 预览（含代码高亮与 XSS 清理）
  */
-function App() {
-  const [markdown_text, set_markdown_text] = useState<string>(`# MarkdownMonkey 使用说明
+const INTRO_ZH = `# MarkdownMonkey 使用说明
 
 欢迎使用 MarkdownMonkey！这是一个基于 Tauri + React/TypeScript 的轻量级 Markdown 桌面编辑器。
 
@@ -50,7 +50,33 @@ function App() {
 - 使用 AI：选中编辑区文本后右键，选择需要的 AI 动作；或点击"AI 对话"与 AI 交互
 - 导出：点击"导出HTML/导出PDF"
 
-祝你写作愉快！`)
+祝你写作愉快！`
+
+const INTRO_EN = `# MarkdownMonkey Quick Guide
+
+Welcome to MarkdownMonkey — a lightweight desktop Markdown editor built with Tauri + React/TypeScript.
+
+## Highlights
+- Edit on the left, live preview on the right (synced scrolling)
+- Code highlighting & XSS sanitization
+- Outline & file tree (multi‑tabs)
+- Search/Replace (regex; highlight in editor & preview)
+- AI Assistant: context actions and chat (minimize/drag/persist), multi providers/models with streaming
+- Auto‑save & local history snapshots
+- Export to HTML / PDF
+
+## Quick Start
+- Open file: Top "Open" or drag a .md file into the window
+- Open folder: "Open Folder" to list Markdown files on the left
+- Outline: toggle "Show Outline" and jump by headings
+- Search/Replace: open the toolbar; regex & highlights supported
+- Use AI: select text and right‑click actions; or open "AI Chat"
+- Export: "Export HTML / Export PDF"
+
+Happy writing!`
+
+function App() {
+  const [markdown_text, set_markdown_text] = useState<string>('')
   const preview_ref = useRef<HTMLDivElement | null>(null)
   const store_ref = useRef<Store | null>(null)
   const [api_base_url, set_api_base_url] = useState<string>('https://api.openai.com')
@@ -294,7 +320,8 @@ function App() {
   }
 
   async function handle_open_folder() {
-    const dir = await open({ directory: true, defaultPath: workspace_root || undefined } as any)
+    const opts: OpenDialogOptions = { directory: true, defaultPath: workspace_root || undefined }
+    const dir = await open(opts)
     if (typeof dir !== 'string') return
     set_workspace_root(dir)
     try {
@@ -550,8 +577,8 @@ function App() {
         }
       } catch {}
     }
-    window.addEventListener('paste', on_paste as any)
-    return () => window.removeEventListener('paste', on_paste as any)
+    window.addEventListener('paste', on_paste as unknown as EventListener)
+    return () => window.removeEventListener('paste', on_paste as unknown as EventListener)
   }, [current_file_path])
 
   const find_all_matches = useCallback((docText: string): Array<{ from: number, to: number }> => {
@@ -744,7 +771,7 @@ function App() {
     return () => {
       unlisten.then(fn => fn())
     }
-  }, [current_file_path, markdown_text])
+  }, [current_file_path, markdown_text, handle_open_file, handle_save_file, untitled_counter])
 
   // 初始化 store
   // 仅初始化一次，读取并应用持久化设置
@@ -757,6 +784,21 @@ function App() {
       fontFamily: 'monospace'
     })
   }, [ui_theme])
+
+  useEffect(() => {
+    // 初始/切换语言时的默认介绍：
+    // - 若当前为空，则填入对应语言
+    // - 若当前内容正是另一种默认介绍，则替换为目标语言
+    set_markdown_text((prev) => {
+      const prevTrim = (prev || '').trim()
+      const zh = INTRO_ZH.trim()
+      const en = INTRO_EN.trim()
+      const target = ui_language === 'en-US' ? en : zh
+      if (!prevTrim) return target
+      if (prevTrim === zh || prevTrim === en) return target
+      return prev
+    })
+  }, [ui_language])
 
   useEffect(() => {
     async function init_store() {
@@ -1381,9 +1423,14 @@ function App() {
               html2canvas: { scale: 2, useCORS: true },
               jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
             }
-            const worker = (html2pdf as any)().set(opt).from(temp)
-            const blob: Blob = await new Promise((resolve, reject) => {
-              try { worker.outputPdf('blob').then(resolve).catch(reject) } catch (e) { reject(e) }
+            const worker = (html2pdf as unknown as () => { set: (o: Record<string, unknown>) => { from: (src: HTMLElement) => { outputPdf: (type: 'blob'|'datauristring') => Promise<Blob|string> } } })()
+              .set(opt).from(temp)
+            const blob: Blob = await new Promise<Blob>((resolve, reject) => {
+              try {
+                worker.outputPdf('blob')
+                  .then((b) => resolve(b as Blob))
+                  .catch(reject)
+              } catch (e) { reject(e as unknown) }
             })
             const bytes = new Uint8Array(await blob.arrayBuffer())
             await writeFile(target, bytes)
@@ -1517,7 +1564,7 @@ function App() {
               <ul className="outline_list">
                 {(() => {
                   // 将 file_list 构建为目录树
-                  const tree: any = {}
+                  const tree: Record<string, any> = {}
                   const ws = (workspace_root || '').replace(/\\/g,'/')
                   for (const p0 of file_list) {
                     const pnorm = (p0 || '').replace(/\\/g,'/')
@@ -1536,17 +1583,17 @@ function App() {
                     cur[file] = { __file: true, __path: p0 }
                   }
 
-                  const render = (node: any, prefix: string[]) => {
+                  const render = (node: Record<string, any>, prefix: string[]) => {
                     const entries = Object.entries(node)
                       .filter(([k]) => !k.startsWith('__'))
-                      .sort((a: any, b: any) => {
+                      .sort((a: [string, any], b: [string, any]) => {
                         const ad = a[1].__dir ? 0 : 1
                         const bd = b[1].__dir ? 0 : 1
                         if (ad !== bd) return ad - bd
                         return a[0].localeCompare(b[0])
                       })
-                    const out: any[] = []
-                    for (const [name, info] of entries as any) {
+                    const out: React.ReactNode[] = []
+                    for (const [name, info] of entries as [string, any][]) {
                       const full = [...prefix, name].join('/')
                       if (info.__dir) {
                         const folded = !!file_tree_fold[full]
@@ -1788,7 +1835,7 @@ function App() {
           { id: 'select_all', label: ui_language==='en-US'?'Select All':'全选', on_click: () => { editor_select_all() } },
           { id: 'clear', label: ui_language==='en-US'?'Clear':'清除', on_click: () => { editor_clear() } },
           // 表情子菜单已移除
-          ...(ai_enabled ? [{ id: 'sep-ai', label: 'sep' } as any] : []),
+          ...(ai_enabled ? [{ id: 'sep-ai', label: 'sep' } as { id: string, label: string }] : []),
           ...(ai_enabled && ctx_has_selection ? [{
             id: 'ai_group',
             label: 'AI',
@@ -1893,7 +1940,9 @@ function App() {
           }},
           { id: 'export_pdf', label: t(ui_language, 'export_pdf'), action: async () => {
             const html = `<!doctype html><html><head><meta charset="utf-8"/><title>${(current_file_path||'').split(/[/\\]/).pop()||'Document'}</title><style>body{font-family:system-ui,Segoe UI,Roboto,Helvetica,Arial;max-width:840px;margin:24px auto;padding:0 16px;line-height:1.7;} pre{background:#0b0b0b;color:#f3f3f3;padding:12px;border-radius:6px;overflow:auto;} code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;} h1,h2,h3{margin:1.2em 0 .6em}</style></head><body class="markdown_body">${rendered_html}</body></html>`
-            const html2pdf = (window as any).html2pdf
+            const html2pdf = (window as unknown as { html2pdf?: unknown }).html2pdf as
+              | (() => { set: (o: Record<string, unknown>) => { from: (src: string) => { save: () => void } } })
+              | undefined
             if (!html2pdf) return
             const opt = {
               margin: 10,
