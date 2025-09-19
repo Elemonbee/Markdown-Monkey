@@ -3,7 +3,7 @@
 All notable changes to MarkdownMonkey will be documented in this file.
 本文件记录 MarkdownMonkey 的所有重要更新。
 
-## [0.1.1a] - 2025-09-19
+## [0.1.1.1] - 2025-09-19
 
 ### 🐛 Bug Fixes / 问题修复
 
