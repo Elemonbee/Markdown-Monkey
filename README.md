@@ -93,8 +93,6 @@ pnpm tauri build
    - Export HTML/PDF from top bar; PDF is client-side generated with styles & highlights
 
 ## Screenshots
-
-![editor](assets/screenshot.png)
 ![ai-chat](assets/screenshotEN.png)
 
 ## Shortcuts
