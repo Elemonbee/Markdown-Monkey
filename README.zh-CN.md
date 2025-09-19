@@ -98,7 +98,6 @@ pnpm tauri build
 ## 截图
 
 <!-- 将实际截图放入 assets/ 目录并提交。以下为占位路径。 -->
-![editor](assets/screenshot.png)
 ![ai-chat](assets/screenshotZH.png)
 
 ## 快捷键
