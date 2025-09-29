@@ -150,6 +150,8 @@ function App() {
   const [tab_ctx_path, set_tab_ctx_path] = useState<string>('')
   const [untitled_counter, set_untitled_counter] = useState<number>(1) // 用于生成未命名文档的编号
   const [untitled_docs, set_untitled_docs] = useState<Record<string, string>>({}) // 保存未命名文档的内容
+  // 是否启用编辑器自动换行
+  const [wrap_enabled, set_wrap_enabled] = useState<boolean>(false)
   // const auto_refresh_timer_ref = useRef<any>(null)
 
   /**
@@ -878,9 +880,11 @@ function App() {
       const saved_theme = (await s.get<'dark' | 'light' | 'system'>('ui_theme')) || 'dark'
       const saved_lang = (await s.get<string>('ui_language')) || 'zh-CN'
       const saved_recent_ai = (await s.get<Array<{ id: string, title: string }>>('recent_ai_actions')) || []
+      const saved_wrap = (await s.get<boolean>('wrap_enabled'))
       set_ui_theme(saved_theme)
       set_ui_language(saved_lang)
       set_recent_ai_actions(saved_recent_ai)
+      if (typeof saved_wrap === 'boolean') set_wrap_enabled(saved_wrap)
       apply_theme(saved_theme)
     }
     init_store()
@@ -907,6 +911,7 @@ function App() {
     await store_ref.current.set('outline_shown', show_outline)
     await store_ref.current.set('outline_width', outline_width)
     await store_ref.current.set('recent_ai_actions', recent_ai_actions)
+    await store_ref.current.set('wrap_enabled', wrap_enabled)
     await store_ref.current.save()
     // 将 API Key 写入/删除系统 Keyring
     try {
@@ -970,6 +975,11 @@ function App() {
       } else if (e.key === 'Escape' && focus_mode) {
         e.preventDefault()
         set_focus_mode(false)
+      } else if ((e.altKey && (e.key === 'z' || e.key === 'Z'))) {
+        e.preventDefault()
+        const next = !wrap_enabled
+        set_wrap_enabled(next)
+        if (store_ref.current) { (async () => { try { await store_ref.current!.set('wrap_enabled', next); await store_ref.current!.save() } catch {} })() }
       }
     }
     window.addEventListener('keydown', handle_keydown)
@@ -1760,6 +1770,13 @@ function App() {
                 '.cm-scroller::-webkit-scrollbar-corner': {
                   background: '#2a2a2a !important'
                 }
+              }),
+              // 自动换行主题：根据 wrap_enabled 切换
+              EditorView.theme({
+                '.cm-content': {
+                  whiteSpace: wrap_enabled ? 'pre-wrap' : 'pre',
+                  wordBreak: wrap_enabled ? 'break-word' : 'normal'
+                }
               })
             ]}
           onChange={(value) => {
@@ -2015,6 +2032,11 @@ function App() {
           }},
           { id: 'focus_mode', label: focus_mode ? (ui_language === 'en-US' ? 'Exit Focus Mode' : '退出专注模式') : (ui_language === 'en-US' ? 'Enter Focus Mode' : '进入专注模式'), shortcut: 'F11', action: () => {
             set_focus_mode(!focus_mode)
+          }},
+          { id: 'toggle_wrap', label: ui_language === 'en-US' ? (wrap_enabled ? 'Disable Word Wrap' : 'Enable Word Wrap') : (wrap_enabled ? '关闭自动换行' : '开启自动换行'), shortcut: 'Alt+Z', action: async () => {
+            const next = !wrap_enabled
+            set_wrap_enabled(next)
+            if (store_ref.current) { try { await store_ref.current.set('wrap_enabled', next); await store_ref.current.save() } catch {} }
           }},
           // 打开标签页快速切换
           ...open_tabs.map((p) => ({
