@@ -1956,7 +1956,7 @@ function App() {
               // 强制显示滚动条的主题扩展
               EditorView.theme({
                 '.cm-scroller': {
-                  overflow: 'scroll !important',
+                  overflow: 'auto !important',
                   scrollbarWidth: 'auto',
                   scrollbarColor: '#888 #2a2a2a'
                 },

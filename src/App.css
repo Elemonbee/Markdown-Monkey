@@ -141,7 +141,7 @@ body {
 
 /* 强制 CodeMirror 显示滚动条 */
 .cm-editor .cm-scroller {
-  overflow: scroll !important;
+  overflow: auto !important;
 }
 
 /* 预览面板滚动条 */
