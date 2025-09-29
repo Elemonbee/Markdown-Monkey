@@ -152,6 +152,13 @@ function App() {
   const [untitled_docs, set_untitled_docs] = useState<Record<string, string>>({}) // 保存未命名文档的内容
   // 是否启用编辑器自动换行
   const [wrap_enabled, set_wrap_enabled] = useState<boolean>(false)
+  // 全局搜索（跨文件）状态
+  const [show_global_search, set_show_global_search] = useState<boolean>(false)
+  const [global_query, set_global_query] = useState<string>('')
+  const [global_regex, set_global_regex] = useState<boolean>(false)
+  const [global_case_i, set_global_case_i] = useState<boolean>(true)
+  const [global_searching, set_global_searching] = useState<boolean>(false)
+  const [global_results, set_global_results] = useState<Array<{ path: string, lineNo: number, from: number, to: number, preview: string }>>([])
   // const auto_refresh_timer_ref = useRef<any>(null)
 
   /**
@@ -989,6 +996,9 @@ function App() {
       } else if (e.ctrlKey && e.key === '0') {
         e.preventDefault()
         reset_editor_font_size()
+      } else if (e.ctrlKey && e.shiftKey && e.key === 'F') {
+        e.preventDefault()
+        set_show_global_search(true)
       }
     }
     window.addEventListener('keydown', handle_keydown)
@@ -1433,6 +1443,63 @@ function App() {
   }
 
   /**
+   * run_global_search
+   * 跨文件搜索当前工作区（workspace_root）内的 Markdown 文件，支持正则与忽略大小写。
+   */
+  async function run_global_search(): Promise<void> {
+    if (!workspace_root) { window.alert(ui_language==='en-US'?'Please open a workspace folder first.':'请先打开工作区文件夹。'); return }
+    const q = (global_query || '').trim()
+    if (!q) { set_global_results([]); return }
+    set_global_searching(true)
+    try {
+      const { invoke } = await import('@tauri-apps/api/core')
+      // 复用后端的 list_md_files
+      const paths = await invoke<string[]>('list_md_files', { dir: workspace_root })
+      const results: Array<{ path: string, lineNo: number, from: number, to: number, preview: string }> = []
+      const re = (() => {
+        if (!global_regex) return null
+        try { return new RegExp(q, global_case_i ? 'gi' : 'g') } catch { return null }
+      })()
+      for (const p of paths) {
+        try {
+          const text = await readTextFile(p)
+          const lines = text.split('\n')
+          for (let i = 0; i < lines.length; i++) {
+            const line = lines[i]
+            if (re) {
+              re.lastIndex = 0
+              let m: RegExpExecArray | null
+              while ((m = re.exec(line))) {
+                const from = m.index
+                const to = m.index + m[0].length
+                const preview = line.slice(Math.max(0, from - 40), Math.min(line.length, to + 40))
+                results.push({ path: p, lineNo: i + 1, from, to, preview })
+                if (m[0].length === 0) re.lastIndex++
+              }
+            } else {
+              const hay = global_case_i ? line.toLowerCase() : line
+              const needle = global_case_i ? q.toLowerCase() : q
+              let idx = 0
+              while (true) {
+                const pos = hay.indexOf(needle, idx)
+                if (pos === -1) break
+                const from = pos
+                const to = pos + needle.length
+                const preview = line.slice(Math.max(0, from - 40), Math.min(line.length, to + 40))
+                results.push({ path: p, lineNo: i + 1, from, to, preview })
+                idx = pos + Math.max(1, needle.length)
+              }
+            }
+          }
+        } catch { /* ignore single file */ }
+      }
+      set_global_results(results.slice(0, 500))
+    } finally {
+      set_global_searching(false)
+    }
+  }
+
+  /**
    * increase_editor_font_size
    * 增大编辑器字号，并持久化到本地设置存储。
    */
@@ -1581,6 +1648,19 @@ function App() {
           <button className="settings_btn" onClick={replace_current}>{t(ui_language, 'replace')}</button>
           <button className="settings_btn" onClick={replace_all}>{t(ui_language, 'replace_all')}</button>
           <div className="status_item">{search_total > 0 ? `${search_idx + 1}/${search_total}` : '0/0'}</div>
+        </div>
+      )}
+      {show_global_search && !focus_mode && (
+        <div className="settings_bar" style={{ gridColumn: '1 / -1', gap: 8, alignItems: 'center' }}>
+          <input className="settings_input" placeholder={ui_language==='en-US'?'Global search keyword (regex supported)':'全局搜索关键词（支持正则）'} value={global_query} onChange={(e) => set_global_query(e.target.value)} onKeyDown={(e) => { if (e.key==='Enter') run_global_search() }} />
+          <label style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+            <input type="checkbox" checked={global_regex} onChange={(e) => set_global_regex(e.target.checked)} /> {ui_language==='en-US'?'Regex':'正则'}
+          </label>
+          <label style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+            <input type="checkbox" checked={global_case_i} onChange={(e) => set_global_case_i(e.target.checked)} /> {ui_language==='en-US'?'Case-insensitive':'忽略大小写'}
+          </label>
+          <button className="settings_btn" disabled={global_searching} onClick={() => run_global_search()}>{global_searching ? (ui_language==='en-US'?'Searching...':'搜索中...') : (ui_language==='en-US'?'Search':'搜索')}</button>
+          <button className="settings_btn" onClick={() => { set_show_global_search(false); set_global_results([]); }}>{ui_language==='en-US'?'Close':'关闭'}</button>
         </div>
       )}
       {/* 标签栏 */}
@@ -1896,6 +1976,31 @@ function App() {
         </div>
         <div className="status_item" title={current_file_path}>{current_file_path || t(ui_language, 'unsaved')}</div>
       </div>
+      {/* 全局搜索结果列表 */}
+      {show_global_search && global_results.length > 0 && !focus_mode && (
+        <div className="pane" style={{ gridColumn: '1 / -1', borderTop: '1px solid #2a2a2a', maxHeight: 280, overflowY: 'auto' }}>
+          <ul className="outline_list">
+            {global_results.map((r, idx) => (
+              <li key={idx} className="outline_item" style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                <button className="outline_btn" title={`${r.path}:${r.lineNo}`} onClick={async () => {
+                  // 打开并跳到命中行
+                  await open_file_at(r.path)
+                  setTimeout(() => {
+                    const view = cm_view_ref.current
+                    if (!view) return
+                    const line = Math.max(1, r.lineNo)
+                    const pos = view.state.doc.line(line).from + r.from
+                    const pos2 = view.state.doc.line(line).from + r.to
+                    view.dispatch({ selection: EditorSelection.range(pos, pos2), scrollIntoView: true })
+                    view.focus()
+                  }, 50)
+                }}>{file_display_name(r.path)}:{r.lineNo}</button>
+                <div style={{ opacity: .8, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{r.preview}</div>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
       <Settings_modal
         is_open={show_settings}
         api_base_url={api_base_url}
@@ -2102,6 +2207,7 @@ function App() {
           { id: 'font_reset', label: ui_language==='en-US'?'Reset Font Size':'重置编辑器字号', shortcut: 'Ctrl+0', action: () => { reset_editor_font_size() } },
           { id: 'insert_iso_datetime', label: ui_language==='en-US'?'Insert DateTime (ISO)':'插入日期时间（ISO）', action: () => { insert_iso_datetime() } },
           { id: 'insert_local_datetime', label: ui_language==='en-US'?'Insert DateTime (Local)':'插入日期时间（本地）', action: () => { insert_local_datetime() } },
+          { id: 'global_search', label: ui_language==='en-US'?'Global Search... (Ctrl+Shift+F)':'全局搜索... (Ctrl+Shift+F)', shortcut: 'Ctrl+Shift+F', action: () => set_show_global_search(true) },
           // 打开标签页快速切换
           ...open_tabs.map((p) => ({
             id: `switch_tab_${p}`,
