@@ -10,10 +10,12 @@ All notable changes to MarkdownMonkey will be documented in this file.
 #### English
 - Synced dual‑pane preview with toggle: two‑way linked scrolling between editor and preview.
 - Command Palette Quick Open (Ctrl+P): quick switch between open tabs and recent files; Alt+1..9 for top recent items.
+ - Word wrap toggle (Alt+Z), font zoom (Ctrl+=/Ctrl+-/Ctrl+0), insert date/time commands.
 
 #### 中文
 - 同步双栏预览（可开关）：编辑区与预览区双向联动滚动。
 - 命令面板快速打开（Ctrl+P）：在已打开标签与最近文件间快速切换；Alt+1..9 打开前 9 个最近项。
+ - 自动换行开关（Alt+Z）、字号缩放（Ctrl+=/Ctrl+-/Ctrl+0）、插入日期时间命令。
 
 ### 📝 Improvements / 改进
 

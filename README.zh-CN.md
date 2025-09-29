@@ -23,7 +23,9 @@
   - 专注模式（F11）：沉浸式写作体验
   - 同步预览：编辑区与预览区双向联动滚动，支持开关
   - Mermaid 图表支持：流程图、时序图、甘特图、饼图等
-  - 示例演示：参见 [功能演示文档](demo-features.md)
+  - 自动换行开关：Alt+Z
+  - 字号缩放：Ctrl+= / Ctrl+- / Ctrl+0
+  - 插入日期时间命令：命令面板提供 ISO 与本地格式
 
 [English Guide](README.md)
 
@@ -108,6 +110,8 @@ pnpm tauri build
 - Ctrl+Shift+P：命令面板
 - F11：专注模式（再次按下或ESC退出）
 - Ctrl+P：快速打开（标签与最近）
+- Alt+Z：切换自动换行
+- Ctrl+= / Ctrl+- / Ctrl+0：增大 / 减小 / 重置 编辑器字号
 - Ctrl+Shift+F：计划中（全局搜索）
 
 ## 国际化

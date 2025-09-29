@@ -23,7 +23,9 @@ Highlights:
   - Focus mode (F11): Immersive writing experience
   - Synced preview: Two-way scrolling between editor and preview, toggleable
   - Mermaid diagram support: Flowcharts, sequence diagrams, Gantt charts, pie charts, etc.
-  - Demo: See [Feature Demos](demo-features.en.md)
+  - Word wrap toggle: Alt+Z
+  - Font zoom: Ctrl+= / Ctrl+- / Ctrl+0
+  - Insert Date/Time commands: ISO and Local formats via Command Palette
 
 [中文使用说明](README.zh-CN.md)
 
@@ -106,6 +108,8 @@ pnpm tauri build
 - Ctrl+Shift+P: Command palette
 - F11: Focus mode (press again or ESC to exit)
 - Ctrl+P: Quick open (tabs and recents)
+- Alt+Z: Toggle word wrap
+- Ctrl+= / Ctrl+- / Ctrl+0: Increase / Decrease / Reset editor font size
 - Ctrl+Shift+F: (planned) Global search
 
 ## Internationalization
