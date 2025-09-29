@@ -745,8 +745,10 @@ function App() {
 
     const lockRef = { locked: false }
     let lastBoundView: EditorView | null = view
+    const activePath = current_file_path || ''
 
     function syncPreviewFromEditor(): void {
+      if ((current_file_path || '') !== activePath) return
       if (lockRef.locked) return
       lockRef.locked = true
       const v = (view as EditorView)
@@ -774,6 +776,7 @@ function App() {
     }
 
     function syncEditorFromPreview(): void {
+      if ((current_file_path || '') !== activePath) return
       if (lockRef.locked) return
       lockRef.locked = true
       const s = (view as EditorView).scrollDOM
