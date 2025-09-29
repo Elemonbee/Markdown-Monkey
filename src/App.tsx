@@ -164,6 +164,8 @@ function App() {
   const current_path_ref = useRef<string>('')
   useEffect(() => { current_path_ref.current = current_file_path || '' }, [current_file_path])
   const preview_el_ref = useRef<HTMLElement | null>(null)
+  // 各文件的滚动状态（按比例保存，避免高度变化）
+  const scroll_state_ref = useRef<Record<string, { editorRatio: number, previewRatio: number }>>({})
   // 全局搜索（跨文件）状态
   const [show_global_search, set_show_global_search] = useState<boolean>(false)
   const [global_query, set_global_query] = useState<string>('')
@@ -339,6 +341,19 @@ function App() {
       set_open_tabs((prev) => prev.includes(path) ? prev : [...prev, path])
       set_save_status('saved')
       set_last_saved_time(new Date())
+      // 恢复该文件的滚动位置（按比例）
+      setTimeout(() => {
+        const v = cm_view_ref.current
+        if (!v) return
+        const key = path
+        const state = scroll_state_ref.current[key]
+        if (state) {
+          const s = v.scrollDOM
+          s.scrollTop = (state.editorRatio || 0) * (s.scrollHeight - s.clientHeight)
+          const pc = document.querySelector('.pane-preview') as HTMLElement | null
+          if (pc) pc.scrollTop = (state.previewRatio || 0) * (pc.scrollHeight - pc.clientHeight)
+        }
+      }, 50)
     } catch (e) { console.error(e) }
   }
 
@@ -689,6 +704,9 @@ function App() {
       if (!pc) return
       const s = v.scrollDOM
       const ratio = s.scrollTop / Math.max(1, s.scrollHeight - s.clientHeight)
+      // 保存当前文件的滚动比例
+      const key = current_path_ref.current || `untitled:${untitled_counter}`
+      scroll_state_ref.current[key] = { editorRatio: ratio, previewRatio: ratio }
       // 可选：结合块映射做微调
       let targetTop = ratio
       try {
@@ -801,6 +819,10 @@ function App() {
       const s = active.scrollDOM
       const pc = previewContainer as HTMLElement
       const ratio = pc.scrollTop / Math.max(1, pc.scrollHeight - pc.clientHeight)
+      // 保存当前文件预览滚动比例
+      const key = current_path_ref.current || `untitled:${untitled_counter}`
+      const prev = scroll_state_ref.current[key] || { editorRatio: 0, previewRatio: 0 }
+      scroll_state_ref.current[key] = { editorRatio: prev.editorRatio, previewRatio: ratio }
       s.scrollTop = ratio * (s.scrollHeight - s.clientHeight)
       requestAnimationFrame(() => {
         lockRef.locked = false
