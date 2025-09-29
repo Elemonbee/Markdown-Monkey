@@ -665,6 +665,35 @@ function App() {
     })
   }, [searchDecorations])
 
+  // 从编辑器滚动 -> 预览滚动（使用 CodeMirror DOM 事件扩展，避免跨实例串扰）
+  const editorScrollSyncExt = useMemo(() => EditorView.domEventHandlers({
+    scroll: (_e, v) => {
+      if (!sync_scroll) return
+      if (v !== cm_view_ref.current) return
+      const pc = document.querySelector('.pane-preview') as HTMLElement | null
+      if (!pc) return
+      const s = v.scrollDOM
+      const ratio = s.scrollTop / Math.max(1, s.scrollHeight - s.clientHeight)
+      // 可选：结合块映射做微调
+      let targetTop = ratio
+      try {
+        const cur = v.state.selection.main.from
+        const blocks = block_map_ref.current
+        if (blocks && blocks.length) {
+          let nearest = blocks[0]
+          let mind = Math.abs(cur - nearest.start)
+          for (const b of blocks) {
+            const d = Math.abs(cur - b.start)
+            if (d < mind) { mind = d; nearest = b }
+          }
+          const idxRatio = nearest.idx / Math.max(1, blocks.length - 1)
+          if (isFinite(idxRatio)) targetTop = (targetTop * 0.5) + (idxRatio * 0.5)
+        }
+      } catch {}
+      pc.scrollTop = targetTop * (pc.scrollHeight - pc.clientHeight)
+    }
+  }), [sync_scroll, rendered_html, current_file_path])
+
   // 根据开关为内容节点设置浏览器原生拼写检查与语言
   // 已移除拼写检查扩展（依赖系统词典，不稳定）。
 
@@ -738,66 +767,24 @@ function App() {
    * - 使用 ref 锁避免递归触发
    */
   useEffect(() => {
+    // 预览 -> 编辑器 的同步仍通过全局监听，但限定为当前实例
     const view = cm_view_ref.current as EditorView | null
     const previewContainer = document.querySelector('.pane-preview') as HTMLElement | null
-    if (!view || !previewContainer) return
-    if (!sync_scroll) return
-
+    if (!view || !previewContainer || !sync_scroll) return
     const lockRef = { locked: false }
-    let lastBoundView: EditorView | null = view
-    const activePath = current_file_path || ''
-
-    function syncPreviewFromEditor(): void {
-      if ((current_file_path || '') !== activePath) return
-      if (lockRef.locked) return
-      lockRef.locked = true
-      const v = (view as EditorView)
-      const s = v.scrollDOM
-      const ratio = s.scrollTop / Math.max(1, s.scrollHeight - s.clientHeight)
-      // 找到距离当前光标最近的块，优先按块对齐，减轻代码块/图片高度差
-      let targetTop = ratio
-      try {
-        const cur = v.state.selection.main.from
-        const blocks = block_map_ref.current
-        if (blocks && blocks.length) {
-          let nearest = blocks[0]
-          let mind = Math.abs(cur - nearest.start)
-          for (const b of blocks) {
-            const d = Math.abs(cur - b.start)
-            if (d < mind) { mind = d; nearest = b }
-          }
-          const idxRatio = nearest.idx / Math.max(1, blocks.length - 1)
-          targetTop = isFinite(idxRatio) ? idxRatio : ratio
-        }
-      } catch { /* fallback to ratio */ }
-      const pc = previewContainer as HTMLElement
-      pc.scrollTop = targetTop * (pc.scrollHeight - pc.clientHeight)
-      requestAnimationFrame(() => { lockRef.locked = false })
-    }
-
+    const active = view
     function syncEditorFromPreview(): void {
-      if ((current_file_path || '') !== activePath) return
       if (lockRef.locked) return
       lockRef.locked = true
-      const s = (view as EditorView).scrollDOM
+      const s = active.scrollDOM
       const pc = previewContainer as HTMLElement
       const ratio = pc.scrollTop / Math.max(1, pc.scrollHeight - pc.clientHeight)
       s.scrollTop = ratio * (s.scrollHeight - s.clientHeight)
       requestAnimationFrame(() => { lockRef.locked = false })
     }
-
-    const editorEl = (view as EditorView).scrollDOM
-    const previewEl = previewContainer
-    editorEl.addEventListener('scroll', syncPreviewFromEditor)
-    previewEl.addEventListener('scroll', syncEditorFromPreview)
-    return () => {
-      if (lastBoundView) {
-        const oldEl = (lastBoundView as EditorView).scrollDOM
-        oldEl.removeEventListener('scroll', syncPreviewFromEditor)
-      }
-      previewEl.removeEventListener('scroll', syncEditorFromPreview)
-    }
-  }, [sync_scroll, rendered_html, current_file_path, ui_language])
+    previewContainer.addEventListener('scroll', syncEditorFromPreview)
+    return () => previewContainer.removeEventListener('scroll', syncEditorFromPreview)
+  }, [sync_scroll, rendered_html, current_file_path])
 
   // 监听从命令行参数打开文件的事件
   useEffect(() => {
@@ -1995,6 +1982,7 @@ function App() {
             editable={true}
             extensions={[
               markdown(),
+              editorScrollSyncExt,
               ...(searchHighlightField ? [searchHighlightField] : []),
               // 强制显示滚动条的主题扩展
               EditorView.theme({
