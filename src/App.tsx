@@ -156,6 +156,8 @@ function App() {
   const [line_numbers_enabled, set_line_numbers_enabled] = useState<boolean>(true)
   // 预览滚动同步的块映射（按 marked 顶层块）
   const block_map_ref = useRef<Array<{ start: number, end: number, idx: number }>>([])
+  // 滚动同步的全局锁与令牌，避免两个方向相互触发导致抖动
+  const scroll_lock_ref = useRef<{ active: boolean, token: number }>({ active: false, token: 0 })
   // 全局搜索（跨文件）状态
   const [show_global_search, set_show_global_search] = useState<boolean>(false)
   const [global_query, set_global_query] = useState<string>('')
@@ -670,6 +672,9 @@ function App() {
     scroll: (_e, v) => {
       if (!sync_scroll) return
       if (v !== cm_view_ref.current) return
+      if (scroll_lock_ref.current.active) return
+      const myToken = Date.now()
+      scroll_lock_ref.current = { active: true, token: myToken }
       const pc = document.querySelector('.pane-preview') as HTMLElement | null
       if (!pc) return
       const s = v.scrollDOM
@@ -691,6 +696,10 @@ function App() {
         }
       } catch {}
       pc.scrollTop = targetTop * (pc.scrollHeight - pc.clientHeight)
+      // 释放锁（在下一帧，确保对端不会立即回调回来）
+      requestAnimationFrame(() => {
+        if (scroll_lock_ref.current.token === myToken) scroll_lock_ref.current.active = false
+      })
     }
   }), [sync_scroll, rendered_html, current_file_path])
 
@@ -774,13 +783,18 @@ function App() {
     const lockRef = { locked: false }
     const active = view
     function syncEditorFromPreview(): void {
-      if (lockRef.locked) return
+      if (lockRef.locked || scroll_lock_ref.current.active) return
       lockRef.locked = true
+      const myToken = Date.now()
+      scroll_lock_ref.current = { active: true, token: myToken }
       const s = active.scrollDOM
       const pc = previewContainer as HTMLElement
       const ratio = pc.scrollTop / Math.max(1, pc.scrollHeight - pc.clientHeight)
       s.scrollTop = ratio * (s.scrollHeight - s.clientHeight)
-      requestAnimationFrame(() => { lockRef.locked = false })
+      requestAnimationFrame(() => {
+        lockRef.locked = false
+        if (scroll_lock_ref.current.token === myToken) scroll_lock_ref.current.active = false
+      })
     }
     previewContainer.addEventListener('scroll', syncEditorFromPreview)
     return () => previewContainer.removeEventListener('scroll', syncEditorFromPreview)
