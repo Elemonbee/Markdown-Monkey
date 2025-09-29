@@ -30,6 +30,8 @@
 
  
 
+另见：[`版本命名与发布规则`](.cursor/rules/release-rules.mdc)
+
 ## 开发
 
 ```

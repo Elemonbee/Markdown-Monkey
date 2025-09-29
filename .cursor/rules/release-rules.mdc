@@ -1,0 +1,55 @@
+---
+# 版本命名与发布规则 / Versioning & Release Rules
+
+## 1. 版本号格式（SemVer）
+- 基本格式：MAJOR.MINOR.PATCH（例：0.2.0）
+- 预发行：MAJOR.MINOR.PATCH-prerelease.label（例：0.2.0-alpha.1、0.2.0-beta.2、0.2.0-rc.1）
+- 内部构建元数据：MAJOR.MINOR.PATCH+build.meta（例：0.2.0+tauri.5、0.2.0+build.20250929）
+- 禁止使用四段版本（如 0.1.1.1）；如需区分内部构建，用 “+metadata”。
+
+## 2. 版本号递增规范
+- MAJOR（破坏性变更）：移除/重命名功能或配置；不兼容格式/接口；快捷键兼容性破坏等。
+- MINOR（向后兼容的新功能）：新增功能、UI 增强、可选配置、性能提升；允许弃用旧行为但仍保留。
+- PATCH（向后兼容的修复）：Bug 修复、样式微调、文档/本地化更新、内部重构、CI/Lint 修复。
+
+## 3. 标签与文件版本对齐
+- Git Tag（对外）：`vMAJOR.MINOR.PATCH[−prerelease]`，例：`v0.2.0`、`v0.2.0-rc.1`。
+- `package.json`：`MAJOR.MINOR.PATCH[−prerelease][+metadata]`
+- `src-tauri/tauri.conf.json`：同上，遵循 Tauri SemVer 校验；必要时使用 `+metadata`。
+- `src-tauri/Cargo.toml`：建议与应用版本一致。
+- 要求：一次发版内三处版本必须一致（除非明确仅在 `tauri.conf.json` 增加 `+metadata` 以满足打包需求）。
+
+## 4. 预发行与夜ly
+- 序列：`alpha` → `beta` → `rc` → 正式。
+- 夜ly（可选）：`vX.Y.Z-nightly.YYYYMMDD`（仅内测，不建议外发）。
+- 从 `rc` 到正式，仅允许修复；如需加入大功能，应提升 MINOR。
+
+## 5. 分支与提交
+- 分支：
+  - `main` 主干；`release/x.y` 稳定分支（仅修复/文档/性能）；`hotfix/x.y.z-<issue>` 线上紧急修复；`feature/<scope>` 常规开发。
+- 提交（Conventional Commits 推荐）：`feat|fix|docs|chore|refactor|perf|test|build|ci|revert`。
+- 发版提交：`chore(release): x.y.z`。
+- 标签：使用注释标签（`-a`），命名为 `vMAJOR.MINOR.PATCH[−prerelease]`。不要重写/删除已公开标签；撤回用新的 PATCH 替代。
+
+## 6. CHANGELOG 与发布说明（双语）
+- 采用 Keep a Changelog 风格：分类 `Features / Fixes / Improvements / Technical`（中英对照）。
+- Tag 与 Release Notes 与 `CHANGELOG.md` 保持一致（双语）。
+- 每次发版需检查：`README.md`、`README.zh-CN.md`、`demo-features*.md`、截图等是否同步更新。
+
+## 7. CI/CD 触发
+- GitHub Actions 以 tag `v\d+\.\d+\.\d+(.*)?` 触发构建与发布。
+- Tauri 读取 `src-tauri/tauri.conf.json` 的 `version`。
+- 需要区分内部构建时，在 `tauri.conf.json` 使用 `+metadata`；对外 tag 仍用不带 metadata 的正式/预发行号。
+
+## 8. 选择版本位速查
+- 仅修复：`+PATCH`（例：0.2.1）。
+- 新功能/快捷键/设置项（兼容）：`+MINOR`（例：0.3.0）。
+- 破坏性变更：`+MAJOR`（例：1.0.0）。
+- 大特性长周期：使用 `alpha/beta/rc` 序列。
+
+## 9. 规范示例
+- 正式：版本 `0.2.0`，标签 `v0.2.0`，提交 `chore(release): 0.2.0`。
+- 预发行：版本 `0.2.0-rc.1`，标签 `v0.2.0-rc.1`。
+- 内部构建（不公开）：`tauri.conf.json` 可用 `0.2.0+tauri.5`，无需打公开标签。
+alwaysApply: true
+---

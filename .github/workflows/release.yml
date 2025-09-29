@@ -1,42 +1,40 @@
-name: Release
+name: Release (SemVer tags only)
 
 on:
   push:
     tags:
-      - 'v*.*.*'
-      - 'v*.*.*.*'
+      - 'v[0-9]+.[0-9]+.[0-9]+'
+      - 'v[0-9]+.[0-9]+.[0-9]+-*'
 
 jobs:
-  build-windows:
-    runs-on: windows-latest
-    permissions:
-      contents: write
+  guard-semver:
+    runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v3
-        with:
-          version: 10
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: pnpm
-      - name: Install frontend deps
-        run: pnpm install --frozen-lockfile
-      - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@stable
-      - name: Install Tauri CLI
-        run: pnpm add -D @tauri-apps/cli
-      - name: Install WiX Toolset (for MSI)
-        run: choco install wixtoolset --no-progress -y
-      - name: Build app (tauri)
-        run: pnpm run tauri:build
-      - name: Upload artifacts
-        uses: softprops/action-gh-release@v2
-        with:
-          files: |
-            src-tauri/target/**/bundle/msi/*.msi
-            src-tauri/target/**/bundle/nsis/*.exe
-            src-tauri/target/**/bundle/**/bundle.*
+      - name: Check out
+        uses: actions/checkout@v4
+      - name: Validate tag matches SemVer (with optional prerelease)
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GIT_REF: ${{ github.ref_name }}
+        run: |
+          echo "Tag: $GIT_REF"
+          if [[ ! "$GIT_REF" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-[A-Za-z0-9.-]+)?$ ]]; then
+            echo "Non-SemVer tag detected, exiting." >&2
+            exit 1
+          fi
+      - name: Echo ok
+        run: echo OK
+
+  # build-tauri:
+  #   needs: guard-semver
+  #   runs-on: windows-latest
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - name: Setup pnpm
+  #       uses: pnpm/action-setup@v4
+  #       with:
+  #         version: 9
+  #     - name: Install deps
+  #       run: pnpm install --frozen-lockfile
+  #     - name: Build (Tauri)
+  #       run: pnpm tauri build
 
