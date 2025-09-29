@@ -154,6 +154,8 @@ function App() {
   const [wrap_enabled, set_wrap_enabled] = useState<boolean>(false)
   // 是否显示行号
   const [line_numbers_enabled, set_line_numbers_enabled] = useState<boolean>(true)
+  // 预览滚动同步的块映射（按 marked 顶层块）
+  const block_map_ref = useRef<Array<{ start: number, end: number, idx: number }>>([])
   // 全局搜索（跨文件）状态
   const [show_global_search, set_show_global_search] = useState<boolean>(false)
   const [global_query, set_global_query] = useState<string>('')
@@ -359,7 +361,25 @@ function App() {
    * 根据当前 markdown 文本计算并更新 HTML 预览，支持 Mermaid 图表
    */
   async function compute_rendered_html(md_text: string) {
-    const parsed = marked.parse(md_text)
+    // 解析为 token，以便建立块级映射，减轻代码块/图片造成的高度不一致
+    const lexer = new marked.Lexer()
+    const tokens = lexer.lex(md_text)
+    // 用于滚动同步的块范围（editor 文本 offset）
+    const blocks: Array<{ start: number, end: number, idx: number }> = []
+    let offset = 0
+    tokens.forEach((t, idx) => {
+      const raw = (t as any).raw as string | undefined
+      if (typeof raw === 'string' && raw.length > 0) {
+        const start = md_text.indexOf(raw, offset)
+        const end = start >= 0 ? start + raw.length : offset
+        if (start >= 0) {
+          blocks.push({ start, end, idx })
+          offset = end
+        }
+      }
+    })
+    block_map_ref.current = blocks
+    const parsed = marked.parser(tokens)
     let html = typeof parsed === 'string' ? parsed : await parsed
     
     // 处理 Mermaid 代码块
@@ -719,7 +739,6 @@ function App() {
    */
   useEffect(() => {
     const view = cm_view_ref.current as EditorView | null
-    // 预览容器是 pane-preview 内的 div（外层承载滚动条）
     const previewContainer = document.querySelector('.pane-preview') as HTMLElement | null
     if (!view || !previewContainer) return
     if (!sync_scroll) return
@@ -729,10 +748,27 @@ function App() {
     function syncPreviewFromEditor(): void {
       if (lockRef.locked) return
       lockRef.locked = true
-      const s = (view as EditorView).scrollDOM
-      const pc = previewContainer as HTMLElement
+      const v = (view as EditorView)
+      const s = v.scrollDOM
       const ratio = s.scrollTop / Math.max(1, s.scrollHeight - s.clientHeight)
-      pc.scrollTop = ratio * (pc.scrollHeight - pc.clientHeight)
+      // 找到距离当前光标最近的块，优先按块对齐，减轻代码块/图片高度差
+      let targetTop = ratio
+      try {
+        const cur = v.state.selection.main.from
+        const blocks = block_map_ref.current
+        if (blocks && blocks.length) {
+          let nearest = blocks[0]
+          let mind = Math.abs(cur - nearest.start)
+          for (const b of blocks) {
+            const d = Math.abs(cur - b.start)
+            if (d < mind) { mind = d; nearest = b }
+          }
+          const idxRatio = nearest.idx / Math.max(1, blocks.length - 1)
+          targetTop = isFinite(idxRatio) ? idxRatio : ratio
+        }
+      } catch { /* fallback to ratio */ }
+      const pc = previewContainer as HTMLElement
+      pc.scrollTop = targetTop * (pc.scrollHeight - pc.clientHeight)
       requestAnimationFrame(() => { lockRef.locked = false })
     }
 
