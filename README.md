@@ -32,8 +32,6 @@ Highlights:
 
  
 
-See also: [Versioning & Release Rules](.cursor/rules/release-rules.mdc)
-
 ## Dev
 
 ```
