@@ -92,7 +92,7 @@ pnpm tauri build
   - Export HTML/PDF; PDF is generated client‑side with preserved styles
 
 ## Screenshots
-![ai-chat](assets/screenshotEN.png)
+![ai-chat](assets/screenshotEN1.png) ![ai-chat](assets/screenshotEN2.png)
 
 ## Shortcuts
 - Ctrl+N: New document

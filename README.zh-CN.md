@@ -88,7 +88,7 @@ pnpm tauri build
   - 顶部按钮导出 HTML/PDF；PDF 保留样式与代码高亮
 
 ## 截图
-![ai-chat](assets/screenshotZH.png)
+![ai-chat](assets/screenshotZH1.png) ![ai-chat](assets/screenshotZH2.png)
 
 ## 快捷键
 - Ctrl+N：新建文档
