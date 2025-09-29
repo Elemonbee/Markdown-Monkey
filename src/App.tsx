@@ -176,6 +176,8 @@ function App() {
   const scroll_state_ref = useRef<Record<string, { editorRatio: number, previewRatio: number }>>({})
   // 当前标签页的预览容器引用
   const local_preview_ref = useRef<HTMLDivElement | null>(null)
+  // 预览外层容器引用（用于监听滚动事件）
+  const preview_pane_ref = useRef<HTMLDivElement | null>(null)
   // 全局搜索（跨文件）状态
   const [show_global_search, set_show_global_search] = useState<boolean>(false)
   const [global_query, set_global_query] = useState<string>('')
@@ -234,7 +236,7 @@ function App() {
     // 保存当前文件的滚动位置
     if (current_file_path) {
       const v = cm_view_ref.current
-      const pc = local_preview_ref.current
+      const pc = preview_pane_ref.current
       if (v && pc) {
         const s = v.scrollDOM
         const editorRatio = s.scrollTop / Math.max(1, s.scrollHeight - s.clientHeight)
@@ -264,7 +266,7 @@ function App() {
       requestAnimationFrame(() => {
         setTimeout(() => {
           const v = cm_view_ref.current
-          const pc = local_preview_ref.current
+          const pc = preview_pane_ref.current
           if (!v || !pc) return
           
           const state = scroll_state_ref.current[path]
@@ -289,7 +291,7 @@ function App() {
         requestAnimationFrame(() => {
           setTimeout(() => {
             const v = cm_view_ref.current
-            const pc = local_preview_ref.current
+            const pc = preview_pane_ref.current
             if (!v || !pc) return
             
             const state = scroll_state_ref.current[path]
@@ -404,7 +406,7 @@ function App() {
       requestAnimationFrame(() => {
         setTimeout(() => {
           const v = cm_view_ref.current
-          const pc = local_preview_ref.current
+          const pc = preview_pane_ref.current
           if (!v || !pc) return
           
           const key = path
@@ -773,7 +775,7 @@ function App() {
       scroll_lock_ref.current = { active: true, token: myToken }
       
       // 直接同步，不延迟
-      const pc = local_preview_ref.current
+      const pc = preview_pane_ref.current
       if (!pc) {
         scroll_lock_ref.current.active = false
         return
@@ -897,17 +899,16 @@ function App() {
     // 延迟设置监听器
     const timer = setTimeout(() => {
       const view = cm_view_ref.current as EditorView | null
-      const previewContainer = local_preview_ref.current
+      const previewContainer = preview_pane_ref.current
       if (!view || !previewContainer) return
       
       let isScrolling = false
       
-      function syncEditorFromPreview(e: Event): void {
+      function syncEditorFromPreview(): void {
         // 检查是否是当前实例
         const currentView = cm_view_ref.current
-        const currentPreview = local_preview_ref.current
+        const currentPreview = preview_pane_ref.current
         if (!currentView || !currentPreview) return
-        if (e.target !== currentPreview) return // 确保是当前实例的预览容器
         if (!sync_scroll_ref.current) return
         if (isScrolling || scroll_lock_ref.current.active) return
         
@@ -942,8 +943,8 @@ function App() {
       if (oldCleanup) oldCleanup()
       
       const cleanup = () => {
-        if (local_preview_ref.current) {
-          local_preview_ref.current.removeEventListener('scroll', syncEditorFromPreview)
+        if (preview_pane_ref.current) {
+          preview_pane_ref.current.removeEventListener('scroll', syncEditorFromPreview)
         }
       }
       window.__preview_cleanup.set(instanceKey, cleanup)
@@ -2235,7 +2236,7 @@ function App() {
       </div>
       {!focus_mode && <div className="splitter" onMouseDown={handle_splitter_down} />}
       {!focus_mode && (
-        <div className="pane pane-preview" style={{ fontSize: preview_font_size }}>
+        <div className="pane pane-preview" style={{ fontSize: preview_font_size }} ref={preview_pane_ref}>
         <div
           ref={(el) => {
             preview_ref.current = el
