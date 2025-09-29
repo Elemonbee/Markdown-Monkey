@@ -17,15 +17,7 @@ Highlights:
 - Local-first: auto save + local history snapshots (latest 20)
 - Export: HTML / PDF (keeps styling and code highlight)
 - i18n: zh-CN and en-US included
-- **New Features**:
-  - Auto-save indicator: Real-time save status display, 3-second auto-save
-  - Command palette (Ctrl+Shift+P / Ctrl+P): Quick access to all features; quick open tabs and recent files
-  - Focus mode (F11): Immersive writing experience
-  - Synced preview: Two-way scrolling between editor and preview, toggleable
-  - Mermaid diagram support: Flowcharts, sequence diagrams, Gantt charts, pie charts, etc.
-  - Word wrap toggle: Alt+Z
-  - Font zoom: Ctrl+= / Ctrl+- / Ctrl+0
-  - Insert Date/Time commands: ISO and Local formats via Command Palette
+ - For version-specific updates, see CHANGELOG: [CHANGELOG.md](CHANGELOG.md)
 
 [中文使用说明](README.zh-CN.md)
 
