@@ -152,6 +152,8 @@ function App() {
   const [untitled_docs, set_untitled_docs] = useState<Record<string, string>>({}) // 保存未命名文档的内容
   // 是否启用编辑器自动换行
   const [wrap_enabled, set_wrap_enabled] = useState<boolean>(false)
+  // 是否显示行号
+  const [line_numbers_enabled, set_line_numbers_enabled] = useState<boolean>(true)
   // 全局搜索（跨文件）状态
   const [show_global_search, set_show_global_search] = useState<boolean>(false)
   const [global_query, set_global_query] = useState<string>('')
@@ -817,6 +819,32 @@ function App() {
     }
   }, [current_file_path, markdown_text, handle_open_file, handle_save_file, untitled_counter])
 
+  // 外部文件变更检测：当当前打开的真实文件被外部修改时，提示重新加载
+  useEffect(() => {
+    if (!current_file_path || current_file_path.startsWith('untitled:')) return
+    let timer: number | null = null
+    let lastContent = markdown_text
+    const path = current_file_path
+    async function poll() {
+      try {
+        const content = await readTextFile(path)
+        if (content !== lastContent && save_status !== 'saving') {
+          const reload = window.confirm(ui_language==='en-US' ? 'File changed on disk. Reload?' : '检测到磁盘中文件已更改，是否重新载入？')
+          if (reload) {
+            set_markdown_text(content)
+            set_save_status('saved')
+            set_last_saved_time(new Date())
+            lastContent = content
+          } else {
+            lastContent = content // 避免重复弹窗
+          }
+        }
+      } catch { /* ignore */ }
+    }
+    timer = setInterval(poll, 3000)
+    return () => { if (timer) clearInterval(timer) }
+  }, [current_file_path, markdown_text, save_status, ui_language])
+
   // 初始化 store
   // 仅初始化一次，读取并应用持久化设置
   // 初始化 Mermaid
@@ -888,10 +916,12 @@ function App() {
       const saved_lang = (await s.get<string>('ui_language')) || 'zh-CN'
       const saved_recent_ai = (await s.get<Array<{ id: string, title: string }>>('recent_ai_actions')) || []
       const saved_wrap = (await s.get<boolean>('wrap_enabled'))
+      const saved_line_numbers = (await s.get<boolean>('line_numbers_enabled'))
       set_ui_theme(saved_theme)
       set_ui_language(saved_lang)
       set_recent_ai_actions(saved_recent_ai)
       if (typeof saved_wrap === 'boolean') set_wrap_enabled(saved_wrap)
+      if (typeof saved_line_numbers === 'boolean') set_line_numbers_enabled(saved_line_numbers)
       apply_theme(saved_theme)
     }
     init_store()
@@ -919,6 +949,7 @@ function App() {
     await store_ref.current.set('outline_width', outline_width)
     await store_ref.current.set('recent_ai_actions', recent_ai_actions)
     await store_ref.current.set('wrap_enabled', wrap_enabled)
+    await store_ref.current.set('line_numbers_enabled', line_numbers_enabled)
     await store_ref.current.save()
     // 将 API Key 写入/删除系统 Keyring
     try {
@@ -987,6 +1018,11 @@ function App() {
         const next = !wrap_enabled
         set_wrap_enabled(next)
         if (store_ref.current) { (async () => { try { await store_ref.current!.set('wrap_enabled', next); await store_ref.current!.save() } catch {} })() }
+      } else if (e.ctrlKey && e.shiftKey && (e.key === 'L' || e.key === 'l')) {
+        e.preventDefault()
+        const next = !line_numbers_enabled
+        set_line_numbers_enabled(next)
+        if (store_ref.current) { (async () => { try { await store_ref.current!.set('line_numbers_enabled', next); await store_ref.current!.save() } catch {} })() }
       } else if (e.ctrlKey && (e.key === '=' || e.key === '+')) {
         e.preventDefault()
         increase_editor_font_size()
@@ -996,6 +1032,15 @@ function App() {
       } else if (e.ctrlKey && e.key === '0') {
         e.preventDefault()
         reset_editor_font_size()
+      } else if (e.ctrlKey && (e.key === 'b' || e.key === 'B')) {
+        e.preventDefault()
+        toggle_inline_format('**')
+      } else if (e.ctrlKey && (e.key === 'i' || e.key === 'I')) {
+        e.preventDefault()
+        toggle_inline_format('*')
+      } else if (e.ctrlKey && e.key === '`') {
+        e.preventDefault()
+        toggle_inline_format('`')
       } else if (e.ctrlKey && e.shiftKey && e.key === 'F') {
         e.preventDefault()
         set_show_global_search(true)
@@ -1438,6 +1483,32 @@ function App() {
       return
     }
     const tr = view.state.update({ changes: { from: sel.from, to: sel.to, insert: '' } })
+    view.dispatch(tr)
+    view.focus()
+  }
+
+  /**
+   * toggle_inline_format
+   * 选区包裹/去包裹 markdown 行内格式（`**`/`*`/`` ` ``），若无选区则在光标处插入成对标记。
+   */
+  function toggle_inline_format(wrapper: '**' | '*' | '`') {
+    const view = cm_view_ref.current
+    if (!view) return
+    const sel = view.state.selection.main
+    const text = view.state.sliceDoc(sel.from, sel.to)
+    const w = wrapper
+    const isWrapped = text.startsWith(w) && text.endsWith(w) && text.length >= w.length * 2
+    let insert: string
+    if (text) {
+      insert = isWrapped ? text.slice(w.length, text.length - w.length) : `${w}${text}${w}`
+    } else {
+      insert = `${w}${w}`
+    }
+    const cursorShift = text ? 0 : -w.length
+    const tr = view.state.update({
+      changes: { from: sel.from, to: sel.to, insert },
+      selection: { anchor: sel.from + insert.length + cursorShift }
+    })
     view.dispatch(tr)
     view.focus()
   }
@@ -1915,6 +1986,12 @@ function App() {
                   whiteSpace: wrap_enabled ? 'pre-wrap' : 'pre',
                   wordBreak: wrap_enabled ? 'break-word' : 'normal'
                 }
+              }),
+              // 行号显示/隐藏
+              EditorView.theme({
+                '.cm-gutters': {
+                  display: line_numbers_enabled ? 'block' : 'none'
+                }
               })
             ]}
           onChange={(value) => {
@@ -2202,12 +2279,20 @@ function App() {
             set_wrap_enabled(next)
             if (store_ref.current) { try { await store_ref.current.set('wrap_enabled', next); await store_ref.current.save() } catch {} }
           }},
+          { id: 'toggle_line_numbers', label: ui_language==='en-US' ? (line_numbers_enabled ? 'Hide Line Numbers' : 'Show Line Numbers') : (line_numbers_enabled ? '隐藏行号' : '显示行号'), shortcut: 'Ctrl+Shift+L', action: async () => {
+            const next = !line_numbers_enabled
+            set_line_numbers_enabled(next)
+            if (store_ref.current) { try { await store_ref.current.set('line_numbers_enabled', next); await store_ref.current.save() } catch {} }
+          }},
           { id: 'font_increase', label: ui_language==='en-US'?'Increase Font Size':'增大编辑器字号', shortcut: 'Ctrl+=', action: () => { increase_editor_font_size() } },
           { id: 'font_decrease', label: ui_language==='en-US'?'Decrease Font Size':'减小编辑器字号', shortcut: 'Ctrl+-', action: () => { decrease_editor_font_size() } },
           { id: 'font_reset', label: ui_language==='en-US'?'Reset Font Size':'重置编辑器字号', shortcut: 'Ctrl+0', action: () => { reset_editor_font_size() } },
           { id: 'insert_iso_datetime', label: ui_language==='en-US'?'Insert DateTime (ISO)':'插入日期时间（ISO）', action: () => { insert_iso_datetime() } },
           { id: 'insert_local_datetime', label: ui_language==='en-US'?'Insert DateTime (Local)':'插入日期时间（本地）', action: () => { insert_local_datetime() } },
           { id: 'global_search', label: ui_language==='en-US'?'Global Search... (Ctrl+Shift+F)':'全局搜索... (Ctrl+Shift+F)', shortcut: 'Ctrl+Shift+F', action: () => set_show_global_search(true) },
+          { id: 'fmt_bold', label: ui_language==='en-US'?'Bold (selection)':'加粗（选区）', shortcut: 'Ctrl+B', action: () => toggle_inline_format('**') },
+          { id: 'fmt_italic', label: ui_language==='en-US'?'Italic (selection)':'斜体（选区）', shortcut: 'Ctrl+I', action: () => toggle_inline_format('*') },
+          { id: 'fmt_code', label: ui_language==='en-US'?'Inline Code (selection)':'行内代码（选区）', shortcut: 'Ctrl+`', action: () => toggle_inline_format('`') },
           // 打开标签页快速切换
           ...open_tabs.map((p) => ({
             id: `switch_tab_${p}`,
