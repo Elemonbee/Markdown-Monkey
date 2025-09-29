@@ -28,13 +28,11 @@ All notable changes to MarkdownMonkey will be documented in this file.
 ### 🔧 Technical Details / 技术细节
 
 #### English
-- Applied `EditorView.contentAttributes` to control browser spellcheck/auto‑correct flags.
 - Injected dynamic commands into Command Palette from `open_tabs` and `recent_files`.
 - Added `Ctrl+P` handler alongside `Ctrl+Shift+P`; persisted settings with `@tauri-apps/plugin-store`.
 - Version bumped across `package.json`, `src-tauri/tauri.conf.json`, and `src-tauri/Cargo.toml` to 0.2.0.
 
 #### 中文
-- 使用 `EditorView.contentAttributes` 控制浏览器拼写检查与自动更正标志。
 - 将 `open_tabs` 与 `recent_files` 动态注入命令面板。
 - 新增 `Ctrl+P` 快捷键（与 `Ctrl+Shift+P` 并存）；设置通过 `@tauri-apps/plugin-store` 持久化。
 - 统一将 `package.json`、`src-tauri/tauri.conf.json`、`src-tauri/Cargo.toml` 升级为 0.2.0。
