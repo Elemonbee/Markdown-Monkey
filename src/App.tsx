@@ -158,6 +158,12 @@ function App() {
   const block_map_ref = useRef<Array<{ start: number, end: number, idx: number }>>([])
   // 滚动同步的全局锁与令牌，避免两个方向相互触发导致抖动
   const scroll_lock_ref = useRef<{ active: boolean, token: number }>({ active: false, token: 0 })
+  // 保持最新状态的引用，避免重复创建扩展导致串扰
+  const sync_scroll_ref = useRef<boolean>(true)
+  useEffect(() => { sync_scroll_ref.current = !!sync_scroll }, [sync_scroll])
+  const current_path_ref = useRef<string>('')
+  useEffect(() => { current_path_ref.current = current_file_path || '' }, [current_file_path])
+  const preview_el_ref = useRef<HTMLElement | null>(null)
   // 全局搜索（跨文件）状态
   const [show_global_search, set_show_global_search] = useState<boolean>(false)
   const [global_query, set_global_query] = useState<string>('')
@@ -670,12 +676,16 @@ function App() {
   // 从编辑器滚动 -> 预览滚动（使用 CodeMirror DOM 事件扩展，避免跨实例串扰）
   const editorScrollSyncExt = useMemo(() => EditorView.domEventHandlers({
     scroll: (_e, v) => {
-      if (!sync_scroll) return
+      if (!sync_scroll_ref.current) return
       if (v !== cm_view_ref.current) return
       if (scroll_lock_ref.current.active) return
       const myToken = Date.now()
       scroll_lock_ref.current = { active: true, token: myToken }
-      const pc = document.querySelector('.pane-preview') as HTMLElement | null
+      let pc = preview_el_ref.current
+      if (!pc) {
+        pc = document.querySelector('.pane-preview') as HTMLElement | null
+        preview_el_ref.current = pc
+      }
       if (!pc) return
       const s = v.scrollDOM
       const ratio = s.scrollTop / Math.max(1, s.scrollHeight - s.clientHeight)
@@ -701,7 +711,7 @@ function App() {
         if (scroll_lock_ref.current.token === myToken) scroll_lock_ref.current.active = false
       })
     }
-  }), [sync_scroll, rendered_html, current_file_path])
+  }), [])
 
   // 根据开关为内容节点设置浏览器原生拼写检查与语言
   // 已移除拼写检查扩展（依赖系统词典，不稳定）。
@@ -783,6 +793,7 @@ function App() {
     const lockRef = { locked: false }
     const active = view
     function syncEditorFromPreview(): void {
+      if (!sync_scroll_ref.current) return
       if (lockRef.locked || scroll_lock_ref.current.active) return
       lockRef.locked = true
       const myToken = Date.now()
@@ -798,7 +809,7 @@ function App() {
     }
     previewContainer.addEventListener('scroll', syncEditorFromPreview)
     return () => previewContainer.removeEventListener('scroll', syncEditorFromPreview)
-  }, [sync_scroll, rendered_html, current_file_path])
+  }, [rendered_html, current_file_path])
 
   // 监听从命令行参数打开文件的事件
   useEffect(() => {
