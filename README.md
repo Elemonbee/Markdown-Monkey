@@ -22,7 +22,6 @@ Highlights:
   - Command palette (Ctrl+Shift+P / Ctrl+P): Quick access to all features; quick open tabs and recent files
   - Focus mode (F11): Immersive writing experience
   - Synced preview: Two-way scrolling between editor and preview, toggleable
-  - English spellcheck toggle (browser native)
   - Mermaid diagram support: Flowcharts, sequence diagrams, Gantt charts, pie charts, etc.
   - Demo: See [Feature Demos](demo-features.en.md)
 

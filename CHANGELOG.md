@@ -9,12 +9,10 @@ All notable changes to MarkdownMonkey will be documented in this file.
 
 #### English
 - Synced dual‑pane preview with toggle: two‑way linked scrolling between editor and preview.
-- English spellcheck toggle (browser native): enable/disable under the top bar; persisted in settings.
 - Command Palette Quick Open (Ctrl+P): quick switch between open tabs and recent files; Alt+1..9 for top recent items.
 
 #### 中文
 - 同步双栏预览（可开关）：编辑区与预览区双向联动滚动。
-- 英文拼写检查开关（浏览器原生）：顶部开关，设置可持久化。
 - 命令面板快速打开（Ctrl+P）：在已打开标签与最近文件间快速切换；Alt+1..9 打开前 9 个最近项。
 
 ### 📝 Improvements / 改进

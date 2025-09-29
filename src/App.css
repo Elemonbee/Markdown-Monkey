@@ -66,10 +66,9 @@ body {
   overflow: hidden; /* 防止编辑器本身产生滚动条 */
 }
 
-/* 浏览器原生英文拼写检查下划线样式（仅英文词） */
-.cm-content[contenteditable="true"][spellcheck="true"] ::spelling-error {
-  text-decoration: underline wavy #d66;
-}
+/* 浏览器原生英文拼写检查下划线样式（不同浏览器差异较大，以下选择器尽量覆盖） */
+/* Chromium 派生浏览器通常直接显示红色波浪线，不可定制。Safari/Firefox 支持 ::spelling-error 等伪元素有限 */
+/* 保留此段以备后续兼容扩展 */
 
 /* 确保 CodeMirror 的根元素高度受限 */
 .pane-editor > div {
@@ -138,11 +137,7 @@ body {
   background: #aaa;
 }
 
-/* 确保编辑器内容可以水平滚动 */
-.pane-editor .cm-content {
-  /* 暂时移除 min-width 以避免冲突 */
-  /* min-width: max-content; */
-}
+/* 原本用于控制编辑器内容水平滚动的样式已不再需要，移除空规则以消除 linter 警告 */
 
 /* 强制 CodeMirror 显示滚动条 */
 .cm-editor .cm-scroller {

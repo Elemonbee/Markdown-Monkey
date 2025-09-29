@@ -133,8 +133,6 @@ function App() {
   const [show_command_palette, set_show_command_palette] = useState<boolean>(false)
   const [focus_mode, set_focus_mode] = useState<boolean>(false)
   const [show_focus_hint, set_show_focus_hint] = useState<boolean>(false)
-  // 英文拼写检查开关（浏览器原生 spellcheck）
-  const [spellcheck_en, set_spellcheck_en] = useState<boolean>(false)
   const [show_search, set_show_search] = useState<boolean>(false)
   const [search_query, set_search_query] = useState<string>('')
   const [replace_query, set_replace_query] = useState<string>('')
@@ -636,6 +634,9 @@ function App() {
     })
   }, [searchDecorations])
 
+  // 根据开关为内容节点设置浏览器原生拼写检查与语言
+  // 已移除拼写检查扩展（依赖系统词典，不稳定）。
+
   function update_search_state(selectFirst: boolean) {
     const view = cm_view_ref.current
     if (!view) return
@@ -706,35 +707,36 @@ function App() {
    * - 使用 ref 锁避免递归触发
    */
   useEffect(() => {
-    const view = cm_view_ref.current
-    const preview = preview_ref.current
-    if (!view || !preview) return
+    const view = cm_view_ref.current as EditorView | null
+    // 预览容器是 pane-preview 内的 div（外层承载滚动条）
+    const previewContainer = document.querySelector('.pane-preview') as HTMLElement | null
+    if (!view || !previewContainer) return
     if (!sync_scroll) return
 
     const lockRef = { locked: false }
 
-    function syncPreviewFromEditor() {
+    function syncPreviewFromEditor(): void {
       if (lockRef.locked) return
       lockRef.locked = true
-      const s = view.scrollDOM
+      const s = (view as EditorView).scrollDOM
+      const pc = previewContainer as HTMLElement
       const ratio = s.scrollTop / Math.max(1, s.scrollHeight - s.clientHeight)
-      const target = ratio * (preview.scrollHeight - preview.clientHeight)
-      preview.scrollTop = target
+      pc.scrollTop = ratio * (pc.scrollHeight - pc.clientHeight)
       requestAnimationFrame(() => { lockRef.locked = false })
     }
 
-    function syncEditorFromPreview() {
+    function syncEditorFromPreview(): void {
       if (lockRef.locked) return
       lockRef.locked = true
-      const s = view.scrollDOM
-      const ratio = preview.scrollTop / Math.max(1, preview.scrollHeight - preview.clientHeight)
-      const target = ratio * (s.scrollHeight - s.clientHeight)
-      s.scrollTop = target
+      const s = (view as EditorView).scrollDOM
+      const pc = previewContainer as HTMLElement
+      const ratio = pc.scrollTop / Math.max(1, pc.scrollHeight - pc.clientHeight)
+      s.scrollTop = ratio * (s.scrollHeight - s.clientHeight)
       requestAnimationFrame(() => { lockRef.locked = false })
     }
 
-    const editorEl = view.scrollDOM
-    const previewEl = preview
+    const editorEl = (view as EditorView).scrollDOM
+    const previewEl = previewContainer
     editorEl.addEventListener('scroll', syncPreviewFromEditor)
     previewEl.addEventListener('scroll', syncEditorFromPreview)
     return () => {
@@ -876,11 +878,9 @@ function App() {
       const saved_theme = (await s.get<'dark' | 'light' | 'system'>('ui_theme')) || 'dark'
       const saved_lang = (await s.get<string>('ui_language')) || 'zh-CN'
       const saved_recent_ai = (await s.get<Array<{ id: string, title: string }>>('recent_ai_actions')) || []
-      const saved_spell = (await s.get<boolean>('spellcheck_en'))
       set_ui_theme(saved_theme)
       set_ui_language(saved_lang)
       set_recent_ai_actions(saved_recent_ai)
-      if (typeof saved_spell === 'boolean') set_spellcheck_en(saved_spell)
       apply_theme(saved_theme)
     }
     init_store()
@@ -907,7 +907,6 @@ function App() {
     await store_ref.current.set('outline_shown', show_outline)
     await store_ref.current.set('outline_width', outline_width)
     await store_ref.current.set('recent_ai_actions', recent_ai_actions)
-    await store_ref.current.set('spellcheck_en', spellcheck_en)
     await store_ref.current.save()
     // 将 API Key 写入/删除系统 Keyring
     try {
@@ -1495,14 +1494,8 @@ function App() {
           <input type="checkbox" checked={sync_scroll} onChange={(e) => set_sync_scroll(e.target.checked)} />
           {ui_language==='en-US' ? 'Sync Scroll' : '同步滚动'}
         </label>
-        <label className="settings_btn" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, cursor: 'pointer' }} title={ui_language==='en-US' ? 'English spellcheck (browser)' : '英文拼写检查（浏览器）'}>
-          <input type="checkbox" checked={spellcheck_en} onChange={(e) => set_spellcheck_en(e.target.checked)} />
-          {ui_language==='en-US' ? 'Spellcheck (EN)' : '拼写检查(英)'}
-        </label>
-        <label className="settings_btn" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, cursor: 'pointer' }}>
-          <input type="checkbox" checked={sync_scroll} onChange={(e) => set_sync_scroll(e.target.checked)} />
-          {ui_language==='en-US' ? 'Sync Scroll' : '同步滚动'}
-        </label>
+        {/* 已移除拼写检查（浏览器原生依赖系统词典，不稳定） */}
+        
       </div>
       {show_search && (
         <div className="settings_bar" style={{ gridColumn: '1 / -1', gap: 8 }}>
