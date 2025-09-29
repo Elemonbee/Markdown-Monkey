@@ -231,6 +231,19 @@ function App() {
     if (!path) return
     if (current_file_path === path) return
     
+    // 保存当前文件的滚动位置
+    if (current_file_path) {
+      const v = cm_view_ref.current
+      const pc = local_preview_ref.current
+      if (v && pc) {
+        const s = v.scrollDOM
+        const editorRatio = s.scrollTop / Math.max(1, s.scrollHeight - s.clientHeight)
+        const previewRatio = pc.scrollTop / Math.max(1, pc.scrollHeight - pc.clientHeight)
+        const key = current_file_path
+        scroll_state_ref.current[key] = { editorRatio, previewRatio }
+      }
+    }
+    
     // 保存当前未命名文档的内容
     if (current_file_path && current_file_path.startsWith('untitled:')) {
       set_untitled_docs(prev => ({
@@ -246,6 +259,24 @@ function App() {
       set_current_file_path(path)
       set_save_status('unsaved')
       set_last_saved_time(null)
+      
+      // 恢复滚动位置
+      requestAnimationFrame(() => {
+        setTimeout(() => {
+          const v = cm_view_ref.current
+          const pc = local_preview_ref.current
+          if (!v || !pc) return
+          
+          const state = scroll_state_ref.current[path]
+          if (state) {
+            scroll_lock_ref.current.active = true
+            const s = v.scrollDOM
+            s.scrollTop = (state.editorRatio || 0) * (s.scrollHeight - s.clientHeight)
+            pc.scrollTop = (state.previewRatio || 0) * (pc.scrollHeight - pc.clientHeight)
+            setTimeout(() => { scroll_lock_ref.current.active = false }, 50)
+          }
+        }, 200)
+      })
     } else {
       try {
         const content = await readTextFile(path)
@@ -253,6 +284,24 @@ function App() {
         set_current_file_path(path)
         set_save_status('saved')
         set_last_saved_time(new Date())
+        
+        // 恢复滚动位置
+        requestAnimationFrame(() => {
+          setTimeout(() => {
+            const v = cm_view_ref.current
+            const pc = local_preview_ref.current
+            if (!v || !pc) return
+            
+            const state = scroll_state_ref.current[path]
+            if (state) {
+              scroll_lock_ref.current.active = true
+              const s = v.scrollDOM
+              s.scrollTop = (state.editorRatio || 0) * (s.scrollHeight - s.clientHeight)
+              pc.scrollTop = (state.previewRatio || 0) * (pc.scrollHeight - pc.clientHeight)
+              setTimeout(() => { scroll_lock_ref.current.active = false }, 50)
+            }
+          }, 200)
+        })
       } catch (e) { console.error(e) }
     }
   }
@@ -352,28 +401,32 @@ function App() {
       set_save_status('saved')
       set_last_saved_time(new Date())
       // 恢复该文件的滚动位置（按比例）
-      setTimeout(() => {
-        const v = cm_view_ref.current
-        const pc = local_preview_ref.current
-        if (!v || !pc) return
-        
-        const key = path
-        const state = scroll_state_ref.current[key]
-        if (state) {
-          // 暂时禁用滚动同步以避免触发事件
-          const prevLock = scroll_lock_ref.current.active
-          scroll_lock_ref.current.active = true
+      requestAnimationFrame(() => {
+        setTimeout(() => {
+          const v = cm_view_ref.current
+          const pc = local_preview_ref.current
+          if (!v || !pc) return
           
-          const s = v.scrollDOM
-          s.scrollTop = (state.editorRatio || 0) * (s.scrollHeight - s.clientHeight)
-          pc.scrollTop = (state.previewRatio || 0) * (pc.scrollHeight - pc.clientHeight)
-          
-          // 恢复锁状态
-          setTimeout(() => {
-            scroll_lock_ref.current.active = prevLock
-          }, 100)
-        }
-      }, 150) // 增加延迟确保 DOM 完全更新
+          const key = path
+          const state = scroll_state_ref.current[key]
+          if (state && (state.editorRatio > 0 || state.previewRatio > 0)) {
+            // 暂时禁用滚动同步以避免触发事件
+            scroll_lock_ref.current.active = true
+            
+            const s = v.scrollDOM
+            const editorScrollTop = (state.editorRatio || 0) * (s.scrollHeight - s.clientHeight)
+            const previewScrollTop = (state.previewRatio || 0) * (pc.scrollHeight - pc.clientHeight)
+            
+            s.scrollTop = editorScrollTop
+            pc.scrollTop = previewScrollTop
+            
+            // 恢复锁状态
+            setTimeout(() => {
+              scroll_lock_ref.current.active = false
+            }, 50)
+          }
+        }, 200) // 增加延迟确保 DOM 和内容完全更新
+      })
     } catch (e) { console.error(e) }
   }
 
@@ -729,9 +782,10 @@ function App() {
       const s = v.scrollDOM
       const ratio = s.scrollTop / Math.max(1, s.scrollHeight - s.clientHeight)
       
-      // 保存当前文件的滚动比例
+      // 保存当前文件的编辑器滚动比例
       const key = current_path_ref.current || `untitled:${untitled_counter}`
-      scroll_state_ref.current[key] = { editorRatio: ratio, previewRatio: ratio }
+      const prevState = scroll_state_ref.current[key] || { editorRatio: 0, previewRatio: 0 }
+      scroll_state_ref.current[key] = { editorRatio: ratio, previewRatio: prevState.previewRatio }
       
       // 可选：结合块映射做微调
       let targetTop = ratio
@@ -867,7 +921,8 @@ function App() {
         
         // 保存当前文件预览滚动比例
         const key = current_path_ref.current || `untitled:${untitled_counter}`
-        scroll_state_ref.current[key] = { editorRatio: ratio, previewRatio: ratio }
+        const prevState = scroll_state_ref.current[key] || { editorRatio: 0, previewRatio: 0 }
+        scroll_state_ref.current[key] = { editorRatio: prevState.editorRatio, previewRatio: ratio }
         
         s.scrollTop = ratio * (s.scrollHeight - s.clientHeight)
         
