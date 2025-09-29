@@ -980,6 +980,15 @@ function App() {
         const next = !wrap_enabled
         set_wrap_enabled(next)
         if (store_ref.current) { (async () => { try { await store_ref.current!.set('wrap_enabled', next); await store_ref.current!.save() } catch {} })() }
+      } else if (e.ctrlKey && (e.key === '=' || e.key === '+')) {
+        e.preventDefault()
+        increase_editor_font_size()
+      } else if (e.ctrlKey && e.key === '-') {
+        e.preventDefault()
+        decrease_editor_font_size()
+      } else if (e.ctrlKey && e.key === '0') {
+        e.preventDefault()
+        reset_editor_font_size()
       }
     }
     window.addEventListener('keydown', handle_keydown)
@@ -1421,6 +1430,55 @@ function App() {
     const tr = view.state.update({ changes: { from: sel.from, to: sel.to, insert: '' } })
     view.dispatch(tr)
     view.focus()
+  }
+
+  /**
+   * increase_editor_font_size
+   * 增大编辑器字号，并持久化到本地设置存储。
+   */
+  async function increase_editor_font_size(): Promise<void> {
+    const next = Math.min(28, (editor_font_size || 16) + 1)
+    set_editor_font_size(next)
+    if (store_ref.current) { try { await store_ref.current.set('editor_font_size', next); await store_ref.current.save() } catch {} }
+  }
+
+  /**
+   * decrease_editor_font_size
+   * 减小编辑器字号，并持久化到本地设置存储。
+   */
+  async function decrease_editor_font_size(): Promise<void> {
+    const next = Math.max(10, (editor_font_size || 16) - 1)
+    set_editor_font_size(next)
+    if (store_ref.current) { try { await store_ref.current.set('editor_font_size', next); await store_ref.current.save() } catch {} }
+  }
+
+  /**
+   * reset_editor_font_size
+   * 重置编辑器字号为默认值（16），并持久化到本地设置存储。
+   */
+  async function reset_editor_font_size(): Promise<void> {
+    const next = 16
+    set_editor_font_size(next)
+    if (store_ref.current) { try { await store_ref.current.set('editor_font_size', next); await store_ref.current.save() } catch {} }
+  }
+
+  /**
+   * insert_iso_datetime
+   * 在光标处插入 ISO 格式日期时间（YYYY-MM-DD HH:mm:ss）。
+   */
+  function insert_iso_datetime(): void {
+    const now = new Date()
+    const pad = (n: number) => (n < 10 ? `0${n}` : `${n}`)
+    const text = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`
+    insert_at_cursor(text)
+  }
+
+  /**
+   * insert_local_datetime
+   * 在光标处插入本地格式日期时间（toLocaleString）。
+   */
+  function insert_local_datetime(): void {
+    insert_at_cursor(new Date().toLocaleString())
   }
 
   return (
@@ -2038,6 +2096,11 @@ function App() {
             set_wrap_enabled(next)
             if (store_ref.current) { try { await store_ref.current.set('wrap_enabled', next); await store_ref.current.save() } catch {} }
           }},
+          { id: 'font_increase', label: ui_language==='en-US'?'Increase Font Size':'增大编辑器字号', shortcut: 'Ctrl+=', action: () => { increase_editor_font_size() } },
+          { id: 'font_decrease', label: ui_language==='en-US'?'Decrease Font Size':'减小编辑器字号', shortcut: 'Ctrl+-', action: () => { decrease_editor_font_size() } },
+          { id: 'font_reset', label: ui_language==='en-US'?'Reset Font Size':'重置编辑器字号', shortcut: 'Ctrl+0', action: () => { reset_editor_font_size() } },
+          { id: 'insert_iso_datetime', label: ui_language==='en-US'?'Insert DateTime (ISO)':'插入日期时间（ISO）', action: () => { insert_iso_datetime() } },
+          { id: 'insert_local_datetime', label: ui_language==='en-US'?'Insert DateTime (Local)':'插入日期时间（本地）', action: () => { insert_local_datetime() } },
           // 打开标签页快速切换
           ...open_tabs.map((p) => ({
             id: `switch_tab_${p}`,
