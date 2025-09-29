@@ -19,8 +19,9 @@
 - 国际化：内置 `zh-CN` 与 `en-US`，UI 全量 i18n
 - **新增功能**：
   - 自动保存指示器：实时显示文档保存状态，3秒自动保存
-  - 命令面板（Ctrl+Shift+P）：快速访问所有功能
+  - 命令面板（Ctrl+Shift+P / Ctrl+P）：快速访问所有功能；快速打开标签页与最近文件
   - 专注模式（F11）：沉浸式写作体验
+  - 同步预览：编辑区与预览区双向联动滚动，支持开关
   - Mermaid 图表支持：流程图、时序图、甘特图、饼图等
   - 示例演示：参见 [功能演示文档](demo-features.md)
 
@@ -97,8 +98,6 @@ pnpm tauri build
    - 顶部按钮支持导出 HTML / PDF；PDF 由前端生成，保留样式与高亮
 
 ## 截图
-
-<!-- 将实际截图放入 assets/ 目录并提交。以下为占位路径。 -->
 ![ai-chat](assets/screenshotZH.png)
 
 ## 快捷键
@@ -108,7 +107,7 @@ pnpm tauri build
 - Ctrl+F：搜索替换
 - Ctrl+Shift+P：命令面板
 - F11：专注模式（再次按下或ESC退出）
-- Ctrl+P：计划中（快速打开）
+- Ctrl+P：快速打开（标签与最近）
 - Ctrl+Shift+F：计划中（全局搜索）
 
 ## 国际化

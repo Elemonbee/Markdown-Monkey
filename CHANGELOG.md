@@ -3,6 +3,44 @@
 All notable changes to MarkdownMonkey will be documented in this file.
 本文件记录 MarkdownMonkey 的所有重要更新。
 
+## [0.2.0] - 2025-09-29
+
+### 🎉 New Features / 新功能
+
+#### English
+- Synced dual‑pane preview with toggle: two‑way linked scrolling between editor and preview.
+- English spellcheck toggle (browser native): enable/disable under the top bar; persisted in settings.
+- Command Palette Quick Open (Ctrl+P): quick switch between open tabs and recent files; Alt+1..9 for top recent items.
+
+#### 中文
+- 同步双栏预览（可开关）：编辑区与预览区双向联动滚动。
+- 英文拼写检查开关（浏览器原生）：顶部开关，设置可持久化。
+- 命令面板快速打开（Ctrl+P）：在已打开标签与最近文件间快速切换；Alt+1..9 打开前 9 个最近项。
+
+### 📝 Improvements / 改进
+
+#### English
+- Stabilized scroll behavior and preview sync on large documents.
+- Updated documentation and shortcuts to reflect new features.
+
+#### 中文
+- 在大文档下优化滚动与预览同步的稳定性。
+- 更新了文档与快捷键，反映新增能力。
+
+### 🔧 Technical Details / 技术细节
+
+#### English
+- Applied `EditorView.contentAttributes` to control browser spellcheck/auto‑correct flags.
+- Injected dynamic commands into Command Palette from `open_tabs` and `recent_files`.
+- Added `Ctrl+P` handler alongside `Ctrl+Shift+P`; persisted settings with `@tauri-apps/plugin-store`.
+- Version bumped across `package.json`, `src-tauri/tauri.conf.json`, and `src-tauri/Cargo.toml` to 0.2.0.
+
+#### 中文
+- 使用 `EditorView.contentAttributes` 控制浏览器拼写检查与自动更正标志。
+- 将 `open_tabs` 与 `recent_files` 动态注入命令面板。
+- 新增 `Ctrl+P` 快捷键（与 `Ctrl+Shift+P` 并存）；设置通过 `@tauri-apps/plugin-store` 持久化。
+- 统一将 `package.json`、`src-tauri/tauri.conf.json`、`src-tauri/Cargo.toml` 升级为 0.2.0。
+
 ## [0.1.1.1] - 2025-09-19
 
 ### 🐛 Bug Fixes / 问题修复

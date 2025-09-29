@@ -98,6 +98,8 @@ function App() {
   const [ui_language, set_ui_language] = useState<string>('zh-CN')
   const media_query_ref = useRef<MediaQueryList | null>(null)
   const [ai_enabled, set_ai_enabled] = useState<boolean>(false)
+  // 是否启用编辑区与预览区的同步滚动
+  const [sync_scroll, set_sync_scroll] = useState<boolean>(true)
   const [status_stats, set_status_stats] = useState<{ chars: number, words: number, minutes: number }>({ chars: 0, words: 0, minutes: 0 })
   const [ai_last_scope, set_ai_last_scope] = useState<'selection' | 'document' | 'unknown'>('unknown')
   const [show_ai_result, set_show_ai_result] = useState<boolean>(false)
@@ -131,6 +133,8 @@ function App() {
   const [show_command_palette, set_show_command_palette] = useState<boolean>(false)
   const [focus_mode, set_focus_mode] = useState<boolean>(false)
   const [show_focus_hint, set_show_focus_hint] = useState<boolean>(false)
+  // 英文拼写检查开关（浏览器原生 spellcheck）
+  const [spellcheck_en, set_spellcheck_en] = useState<boolean>(false)
   const [show_search, set_show_search] = useState<boolean>(false)
   const [search_query, set_search_query] = useState<string>('')
   const [replace_query, set_replace_query] = useState<string>('')
@@ -696,19 +700,48 @@ function App() {
     set_search_total(0)
   }
 
-  // 编辑器 -> 预览 同步滚动
+  /**
+   * 双向同步滚动（编辑器 <-> 预览）
+   * - 通过 ratio 保持两边滚动位置相近
+   * - 使用 ref 锁避免递归触发
+   */
   useEffect(() => {
     const view = cm_view_ref.current
     const preview = preview_ref.current
     if (!view || !preview) return
-    const onScroll = () => {
+    if (!sync_scroll) return
+
+    const lockRef = { locked: false }
+
+    function syncPreviewFromEditor() {
+      if (lockRef.locked) return
+      lockRef.locked = true
       const s = view.scrollDOM
       const ratio = s.scrollTop / Math.max(1, s.scrollHeight - s.clientHeight)
-      preview.scrollTop = ratio * (preview.scrollHeight - preview.clientHeight)
+      const target = ratio * (preview.scrollHeight - preview.clientHeight)
+      preview.scrollTop = target
+      requestAnimationFrame(() => { lockRef.locked = false })
     }
-    view.scrollDOM.addEventListener('scroll', onScroll)
-    return () => view.scrollDOM.removeEventListener('scroll', onScroll)
-  }, [])
+
+    function syncEditorFromPreview() {
+      if (lockRef.locked) return
+      lockRef.locked = true
+      const s = view.scrollDOM
+      const ratio = preview.scrollTop / Math.max(1, preview.scrollHeight - preview.clientHeight)
+      const target = ratio * (s.scrollHeight - s.clientHeight)
+      s.scrollTop = target
+      requestAnimationFrame(() => { lockRef.locked = false })
+    }
+
+    const editorEl = view.scrollDOM
+    const previewEl = preview
+    editorEl.addEventListener('scroll', syncPreviewFromEditor)
+    previewEl.addEventListener('scroll', syncEditorFromPreview)
+    return () => {
+      editorEl.removeEventListener('scroll', syncPreviewFromEditor)
+      previewEl.removeEventListener('scroll', syncEditorFromPreview)
+    }
+  }, [sync_scroll, rendered_html])
 
   // 监听从命令行参数打开文件的事件
   useEffect(() => {
@@ -843,9 +876,11 @@ function App() {
       const saved_theme = (await s.get<'dark' | 'light' | 'system'>('ui_theme')) || 'dark'
       const saved_lang = (await s.get<string>('ui_language')) || 'zh-CN'
       const saved_recent_ai = (await s.get<Array<{ id: string, title: string }>>('recent_ai_actions')) || []
+      const saved_spell = (await s.get<boolean>('spellcheck_en'))
       set_ui_theme(saved_theme)
       set_ui_language(saved_lang)
       set_recent_ai_actions(saved_recent_ai)
+      if (typeof saved_spell === 'boolean') set_spellcheck_en(saved_spell)
       apply_theme(saved_theme)
     }
     init_store()
@@ -872,6 +907,7 @@ function App() {
     await store_ref.current.set('outline_shown', show_outline)
     await store_ref.current.set('outline_width', outline_width)
     await store_ref.current.set('recent_ai_actions', recent_ai_actions)
+    await store_ref.current.set('spellcheck_en', spellcheck_en)
     await store_ref.current.save()
     // 将 API Key 写入/删除系统 Keyring
     try {
@@ -924,6 +960,9 @@ function App() {
         const view = cm_view_ref.current
         if (view) { view.focus() }
       } else if (e.ctrlKey && e.shiftKey && e.key === 'P') {
+        e.preventDefault()
+        set_show_command_palette(true)
+      } else if (e.ctrlKey && !e.shiftKey && (e.key === 'p' || e.key === 'P')) {
         e.preventDefault()
         set_show_command_palette(true)
       } else if (e.key === 'F11') {
@@ -1452,6 +1491,18 @@ function App() {
           </>
         )}
         <button className="settings_btn" onClick={() => set_show_outline((v) => !v)}>{show_outline ? t(ui_language, 'hide_outline') : t(ui_language, 'show_outline')}</button>
+        <label className="settings_btn" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, cursor: 'pointer' }} title={ui_language==='en-US' ? 'Sync editor/preview scroll' : '同步编辑与预览滚动'}>
+          <input type="checkbox" checked={sync_scroll} onChange={(e) => set_sync_scroll(e.target.checked)} />
+          {ui_language==='en-US' ? 'Sync Scroll' : '同步滚动'}
+        </label>
+        <label className="settings_btn" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, cursor: 'pointer' }} title={ui_language==='en-US' ? 'English spellcheck (browser)' : '英文拼写检查（浏览器）'}>
+          <input type="checkbox" checked={spellcheck_en} onChange={(e) => set_spellcheck_en(e.target.checked)} />
+          {ui_language==='en-US' ? 'Spellcheck (EN)' : '拼写检查(英)'}
+        </label>
+        <label className="settings_btn" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, cursor: 'pointer' }}>
+          <input type="checkbox" checked={sync_scroll} onChange={(e) => set_sync_scroll(e.target.checked)} />
+          {ui_language==='en-US' ? 'Sync Scroll' : '同步滚动'}
+        </label>
       </div>
       {show_search && (
         <div className="settings_bar" style={{ gridColumn: '1 / -1', gap: 8 }}>
@@ -1684,7 +1735,9 @@ function App() {
             theme={ui_theme === 'light' ? undefined : oneDark}
             height="calc(100vh - 120px)" // 使用视口高度减去顶部和底部栏的高度
             style={{ height: '100%', maxHeight: 'calc(100vh - 120px)' }}
+            // 浏览器原生拼写检查（仅英文），开启时对英文单词下划线提示
             basicSetup={true}
+            editable={true}
             extensions={[
               markdown(),
               ...(searchHighlightField ? [searchHighlightField] : []),
@@ -1969,7 +2022,20 @@ function App() {
           }},
           { id: 'focus_mode', label: focus_mode ? (ui_language === 'en-US' ? 'Exit Focus Mode' : '退出专注模式') : (ui_language === 'en-US' ? 'Enter Focus Mode' : '进入专注模式'), shortcut: 'F11', action: () => {
             set_focus_mode(!focus_mode)
-          }}
+          }},
+          // 打开标签页快速切换
+          ...open_tabs.map((p) => ({
+            id: `switch_tab_${p}`,
+            label: `${ui_language==='en-US'?'[Tab]':'[标签]'} ${file_display_name(p)}`,
+            action: () => switch_to_tab(p)
+          })),
+          // 最近文件（最多 10 条）
+          ...recent_files.slice(0, 10).map((p, idx) => ({
+            id: `recent_${idx}_${p}`,
+            label: `${ui_language==='en-US'?'[Recent]':'[最近]'} ${file_display_name(p)}`,
+            shortcut: idx < 9 ? `Alt+${idx+1}` : undefined,
+            action: () => open_file_at(p)
+          })),
         ]}
         ui_language={ui_language}
         on_close={() => set_show_command_palette(false)}

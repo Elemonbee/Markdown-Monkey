@@ -66,6 +66,11 @@ body {
   overflow: hidden; /* 防止编辑器本身产生滚动条 */
 }
 
+/* 浏览器原生英文拼写检查下划线样式（仅英文词） */
+.cm-content[contenteditable="true"][spellcheck="true"] ::spelling-error {
+  text-decoration: underline wavy #d66;
+}
+
 /* 确保 CodeMirror 的根元素高度受限 */
 .pane-editor > div {
   height: 100%;

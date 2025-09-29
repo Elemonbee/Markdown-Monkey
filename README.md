@@ -19,8 +19,10 @@ Highlights:
 - i18n: zh-CN and en-US included
 - **New Features**:
   - Auto-save indicator: Real-time save status display, 3-second auto-save
-  - Command palette (Ctrl+Shift+P): Quick access to all features
+  - Command palette (Ctrl+Shift+P / Ctrl+P): Quick access to all features; quick open tabs and recent files
   - Focus mode (F11): Immersive writing experience
+  - Synced preview: Two-way scrolling between editor and preview, toggleable
+  - English spellcheck toggle (browser native)
   - Mermaid diagram support: Flowcharts, sequence diagrams, Gantt charts, pie charts, etc.
   - Demo: See [Feature Demos](demo-features.en.md)
 
@@ -104,7 +106,7 @@ pnpm tauri build
 - Ctrl+F: Search/Replace
 - Ctrl+Shift+P: Command palette
 - F11: Focus mode (press again or ESC to exit)
-- Ctrl+P: (planned) Quick open
+- Ctrl+P: Quick open (tabs and recents)
 - Ctrl+Shift+F: (planned) Global search
 
 ## Internationalization
