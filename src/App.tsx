@@ -744,17 +744,13 @@ function App() {
     if (!sync_scroll) return
 
     const lockRef = { locked: false }
+    let lastBoundView: EditorView | null = view
 
     function syncPreviewFromEditor(): void {
       if (lockRef.locked) return
       lockRef.locked = true
       const v = (view as EditorView)
       const s = v.scrollDOM
-      // 若当前 tab 非激活（安全兜底）：忽略此次同步
-      if (document.activeElement && !v.dom.contains(document.activeElement)) {
-        lockRef.locked = false
-        return
-      }
       const ratio = s.scrollTop / Math.max(1, s.scrollHeight - s.clientHeight)
       // 找到距离当前光标最近的块，优先按块对齐，减轻代码块/图片高度差
       let targetTop = ratio
@@ -781,8 +777,6 @@ function App() {
       if (lockRef.locked) return
       lockRef.locked = true
       const s = (view as EditorView).scrollDOM
-      // 若当前 tab 非激活（安全兜底）：忽略此次同步
-      if (!document.body.contains(s)) { lockRef.locked = false; return }
       const pc = previewContainer as HTMLElement
       const ratio = pc.scrollTop / Math.max(1, pc.scrollHeight - pc.clientHeight)
       s.scrollTop = ratio * (s.scrollHeight - s.clientHeight)
@@ -794,7 +788,10 @@ function App() {
     editorEl.addEventListener('scroll', syncPreviewFromEditor)
     previewEl.addEventListener('scroll', syncEditorFromPreview)
     return () => {
-      editorEl.removeEventListener('scroll', syncPreviewFromEditor)
+      if (lastBoundView) {
+        const oldEl = (lastBoundView as EditorView).scrollDOM
+        oldEl.removeEventListener('scroll', syncPreviewFromEditor)
+      }
       previewEl.removeEventListener('scroll', syncEditorFromPreview)
     }
   }, [sync_scroll, rendered_html, current_file_path, ui_language])
