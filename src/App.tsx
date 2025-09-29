@@ -163,9 +163,10 @@ function App() {
   useEffect(() => { sync_scroll_ref.current = !!sync_scroll }, [sync_scroll])
   const current_path_ref = useRef<string>('')
   useEffect(() => { current_path_ref.current = current_file_path || '' }, [current_file_path])
-  const preview_el_ref = useRef<HTMLElement | null>(null)
   // 各文件的滚动状态（按比例保存，避免高度变化）
   const scroll_state_ref = useRef<Record<string, { editorRatio: number, previewRatio: number }>>({})
+  // 当前标签页的预览容器引用
+  const local_preview_ref = useRef<HTMLDivElement | null>(null)
   // 全局搜索（跨文件）状态
   const [show_global_search, set_show_global_search] = useState<boolean>(false)
   const [global_query, set_global_query] = useState<string>('')
@@ -350,7 +351,7 @@ function App() {
         if (state) {
           const s = v.scrollDOM
           s.scrollTop = (state.editorRatio || 0) * (s.scrollHeight - s.clientHeight)
-          const pc = document.querySelector('.pane-preview') as HTMLElement | null
+          const pc = local_preview_ref.current
           if (pc) pc.scrollTop = (state.previewRatio || 0) * (pc.scrollHeight - pc.clientHeight)
         }
       }, 50)
@@ -696,11 +697,8 @@ function App() {
       if (scroll_lock_ref.current.active) return
       const myToken = Date.now()
       scroll_lock_ref.current = { active: true, token: myToken }
-      let pc = preview_el_ref.current
-      if (!pc) {
-        pc = document.querySelector('.pane-preview') as HTMLElement | null
-        preview_el_ref.current = pc
-      }
+      // 使用当前标签页的预览容器
+      const pc = local_preview_ref.current
       if (!pc) return
       const s = v.scrollDOM
       const ratio = s.scrollTop / Math.max(1, s.scrollHeight - s.clientHeight)
@@ -806,7 +804,7 @@ function App() {
   useEffect(() => {
     // 预览 -> 编辑器 的同步仍通过全局监听，但限定为当前实例
     const view = cm_view_ref.current as EditorView | null
-    const previewContainer = document.querySelector('.pane-preview') as HTMLElement | null
+    const previewContainer = local_preview_ref.current
     if (!view || !previewContainer || !sync_scroll) return
     const lockRef = { locked: false }
     const active = view
@@ -2108,7 +2106,10 @@ function App() {
       {!focus_mode && (
         <div className="pane pane-preview" style={{ fontSize: preview_font_size }}>
         <div
-          ref={preview_ref}
+          ref={(el) => {
+            preview_ref.current = el
+            local_preview_ref.current = el
+          }}
           className="preview_html markdown_body"
           dangerouslySetInnerHTML={{ __html: rendered_html }}
         />
