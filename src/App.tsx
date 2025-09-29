@@ -1,6 +1,13 @@
 import { useEffect, useMemo, useRef, useState, useCallback } from 'react'
 import type React from 'react'
 import './App.css'
+
+// 扩展 window 类型定义
+declare global {
+  interface Window {
+    __preview_cleanup?: Map<string, () => void>
+  }
+}
 import { t } from './i18n'
 import mermaid from 'mermaid'
 import { marked } from 'marked'
@@ -697,34 +704,42 @@ function App() {
       if (scroll_lock_ref.current.active) return
       const myToken = Date.now()
       scroll_lock_ref.current = { active: true, token: myToken }
-      // 使用当前标签页的预览容器
-      const pc = local_preview_ref.current
-      if (!pc) return
-      const s = v.scrollDOM
-      const ratio = s.scrollTop / Math.max(1, s.scrollHeight - s.clientHeight)
-      // 保存当前文件的滚动比例
-      const key = current_path_ref.current || `untitled:${untitled_counter}`
-      scroll_state_ref.current[key] = { editorRatio: ratio, previewRatio: ratio }
-      // 可选：结合块映射做微调
-      let targetTop = ratio
-      try {
-        const cur = v.state.selection.main.from
-        const blocks = block_map_ref.current
-        if (blocks && blocks.length) {
-          let nearest = blocks[0]
-          let mind = Math.abs(cur - nearest.start)
-          for (const b of blocks) {
-            const d = Math.abs(cur - b.start)
-            if (d < mind) { mind = d; nearest = b }
-          }
-          const idxRatio = nearest.idx / Math.max(1, blocks.length - 1)
-          if (isFinite(idxRatio)) targetTop = (targetTop * 0.5) + (idxRatio * 0.5)
-        }
-      } catch {}
-      pc.scrollTop = targetTop * (pc.scrollHeight - pc.clientHeight)
-      // 释放锁（在下一帧，确保对端不会立即回调回来）
+      
+      // 延迟一帧以确保 DOM 已更新
       requestAnimationFrame(() => {
-        if (scroll_lock_ref.current.token === myToken) scroll_lock_ref.current.active = false
+        // 使用当前标签页的预览容器
+        const pc = local_preview_ref.current
+        if (!pc) {
+          if (scroll_lock_ref.current.token === myToken) scroll_lock_ref.current.active = false
+          return
+        }
+        
+        const s = v.scrollDOM
+        const ratio = s.scrollTop / Math.max(1, s.scrollHeight - s.clientHeight)
+        // 保存当前文件的滚动比例
+        const key = current_path_ref.current || `untitled:${untitled_counter}`
+        scroll_state_ref.current[key] = { editorRatio: ratio, previewRatio: ratio }
+        // 可选：结合块映射做微调
+        let targetTop = ratio
+        try {
+          const cur = v.state.selection.main.from
+          const blocks = block_map_ref.current
+          if (blocks && blocks.length) {
+            let nearest = blocks[0]
+            let mind = Math.abs(cur - nearest.start)
+            for (const b of blocks) {
+              const d = Math.abs(cur - b.start)
+              if (d < mind) { mind = d; nearest = b }
+            }
+            const idxRatio = nearest.idx / Math.max(1, blocks.length - 1)
+            if (isFinite(idxRatio)) targetTop = (targetTop * 0.5) + (idxRatio * 0.5)
+          }
+        } catch {}
+        pc.scrollTop = targetTop * (pc.scrollHeight - pc.clientHeight)
+        // 释放锁（在下一帧，确保对端不会立即回调回来）
+        requestAnimationFrame(() => {
+          if (scroll_lock_ref.current.token === myToken) scroll_lock_ref.current.active = false
+        })
       })
     }
   }), [])
@@ -802,34 +817,70 @@ function App() {
    * - 使用 ref 锁避免递归触发
    */
   useEffect(() => {
-    // 预览 -> 编辑器 的同步仍通过全局监听，但限定为当前实例
-    const view = cm_view_ref.current as EditorView | null
-    const previewContainer = local_preview_ref.current
-    if (!view || !previewContainer || !sync_scroll) return
-    const lockRef = { locked: false }
-    const active = view
-    function syncEditorFromPreview(): void {
-      if (!sync_scroll_ref.current) return
-      if (lockRef.locked || scroll_lock_ref.current.active) return
-      lockRef.locked = true
-      const myToken = Date.now()
-      scroll_lock_ref.current = { active: true, token: myToken }
-      const s = active.scrollDOM
-      const pc = previewContainer as HTMLElement
-      const ratio = pc.scrollTop / Math.max(1, pc.scrollHeight - pc.clientHeight)
-      // 保存当前文件预览滚动比例
-      const key = current_path_ref.current || `untitled:${untitled_counter}`
-      const prev = scroll_state_ref.current[key] || { editorRatio: 0, previewRatio: 0 }
-      scroll_state_ref.current[key] = { editorRatio: prev.editorRatio, previewRatio: ratio }
-      s.scrollTop = ratio * (s.scrollHeight - s.clientHeight)
-      requestAnimationFrame(() => {
-        lockRef.locked = false
-        if (scroll_lock_ref.current.token === myToken) scroll_lock_ref.current.active = false
-      })
+    // 预览 -> 编辑器 的同步
+    // 延迟一帧以确保 DOM 已更新
+    const timer = setTimeout(() => {
+      const view = cm_view_ref.current as EditorView | null
+      const previewContainer = local_preview_ref.current
+      if (!view || !previewContainer || !sync_scroll) return
+      
+      const lockRef = { locked: false }
+      function syncEditorFromPreview(): void {
+        // 每次都获取最新的引用
+        const currentView = cm_view_ref.current
+        const currentPreview = local_preview_ref.current
+        if (!currentView || !currentPreview) return
+        if (!sync_scroll_ref.current) return
+        if (lockRef.locked || scroll_lock_ref.current.active) return
+        
+        lockRef.locked = true
+        const myToken = Date.now()
+        scroll_lock_ref.current = { active: true, token: myToken }
+        
+        const s = currentView.scrollDOM
+        const pc = currentPreview as HTMLElement
+        const ratio = pc.scrollTop / Math.max(1, pc.scrollHeight - pc.clientHeight)
+        
+        // 保存当前文件预览滚动比例
+        const key = current_path_ref.current || `untitled:${untitled_counter}`
+        const prev = scroll_state_ref.current[key] || { editorRatio: 0, previewRatio: 0 }
+        scroll_state_ref.current[key] = { editorRatio: prev.editorRatio, previewRatio: ratio }
+        s.scrollTop = ratio * (s.scrollHeight - s.clientHeight)
+        
+        requestAnimationFrame(() => {
+          lockRef.locked = false
+          if (scroll_lock_ref.current.token === myToken) scroll_lock_ref.current.active = false
+        })
+      }
+      
+      previewContainer.addEventListener('scroll', syncEditorFromPreview)
+      // 保存清理函数
+      const cleanup = () => {
+        const pc = local_preview_ref.current
+        if (pc) pc.removeEventListener('scroll', syncEditorFromPreview)
+      }
+      
+      // 将清理函数保存到全局
+      if (!window.__preview_cleanup) window.__preview_cleanup = new Map()
+      const cleanupKey = `preview_${current_file_path || untitled_counter}`
+      const oldCleanup = window.__preview_cleanup.get(cleanupKey)
+      if (oldCleanup) oldCleanup()
+      window.__preview_cleanup.set(cleanupKey, cleanup)
+    }, 50) // 延迟 50ms 以确保 DOM 完全更新
+    
+    return () => {
+      clearTimeout(timer)
+      // 清理事件监听器
+      if (window.__preview_cleanup) {
+        const cleanupKey = `preview_${current_file_path || untitled_counter}`
+        const cleanup = window.__preview_cleanup.get(cleanupKey)
+        if (cleanup) {
+          cleanup()
+          window.__preview_cleanup.delete(cleanupKey)
+        }
+      }
     }
-    previewContainer.addEventListener('scroll', syncEditorFromPreview)
-    return () => previewContainer.removeEventListener('scroll', syncEditorFromPreview)
-  }, [rendered_html, current_file_path])
+  }, [rendered_html, current_file_path, sync_scroll])
 
   // 监听从命令行参数打开文件的事件
   useEffect(() => {
