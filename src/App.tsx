@@ -1945,8 +1945,8 @@ function App() {
         <CodeMirror
           value={markdown_text}
             theme={ui_theme === 'light' ? undefined : oneDark}
-            height="calc(100vh - 120px)" // 使用视口高度减去顶部和底部栏的高度
-            style={{ height: '100%', maxHeight: 'calc(100vh - 120px)' }}
+            height="auto"
+            style={{ height: '100%', maxHeight: 'calc(100vh - 120px)', minHeight: 0 }}
             // 浏览器原生拼写检查（仅英文），开启时对英文单词下划线提示
             basicSetup={true}
             editable={true}
@@ -1956,9 +1956,9 @@ function App() {
               // 强制显示滚动条的主题扩展
               EditorView.theme({
                 '.cm-scroller': {
-                  overflow: 'auto !important',
-                  scrollbarWidth: 'auto',
-                  scrollbarColor: '#888 #2a2a2a'
+                  overflowY: 'auto !important',
+                  overflowX: 'auto !important',
+                  maxHeight: 'calc(100vh - 120px) !important'
                 },
                 '.cm-scroller::-webkit-scrollbar': {
                   width: '14px !important',
