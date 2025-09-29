@@ -2078,6 +2078,7 @@ function App() {
           { id: 'search', label: t(ui_language, 'search_replace'), shortcut: 'Ctrl+F', action: () => set_show_search(true) },
           { id: 'ai_chat', label: t(ui_language, 'ai_chat'), action: () => set_show_ai_chat(true) },
           { id: 'toggle_outline', label: show_outline ? t(ui_language, 'hide_outline') : t(ui_language, 'show_outline'), action: () => set_show_outline(!show_outline) },
+          { id: 'toggle_sync_scroll', label: ui_language==='en-US' ? (sync_scroll ? 'Disable Sync Scroll' : 'Enable Sync Scroll') : (sync_scroll ? '关闭同步滚动' : '开启同步滚动'), action: () => set_sync_scroll(!sync_scroll) },
           { id: 'toggle_theme', label: ui_language === 'en-US' ? 'Toggle Theme' : '切换主题', action: () => {
             const themes = ['dark', 'light', 'system'] as const
             const current_index = themes.indexOf(ui_theme)
