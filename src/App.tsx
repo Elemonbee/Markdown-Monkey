@@ -13,6 +13,7 @@ import mermaid from 'mermaid'
 import { marked } from 'marked'
 import DOMPurify from 'dompurify'
 import hljs from 'highlight.js'
+import { getVersion as tauriGetVersion } from '@tauri-apps/api/app'
 import 'highlight.js/styles/github-dark.css'
 import { Store } from '@tauri-apps/plugin-store'
 const monkeyIcon = new URL('../assets/icon.svg', import.meta.url).href
@@ -186,6 +187,19 @@ function App() {
   const [global_searching, set_global_searching] = useState<boolean>(false)
   const [global_results, set_global_results] = useState<Array<{ path: string, lineNo: number, from: number, to: number, preview: string }>>([])
   // const auto_refresh_timer_ref = useRef<any>(null)
+
+  // 应用版本号
+  const [app_version, set_app_version] = useState<string>('')
+  useEffect(() => {
+    (async () => {
+      try {
+        const v = await tauriGetVersion()
+        set_app_version(v)
+      } catch {
+        set_app_version('dev')
+      }
+    })()
+  }, [])
 
   /**
    * file_display_name
@@ -1908,7 +1922,10 @@ function App() {
           {ui_language==='en-US' ? 'Sync Scroll' : '同步滚动'}
         </label>
         {/* 已移除拼写检查（浏览器原生依赖系统词典，不稳定） */}
-        
+        <div style={{ flex: 1 }} />
+        <div className="status_item" title={ui_language==='en-US' ? 'Application Version' : '程序版本'} style={{ opacity: 0.8 }}>
+          v{app_version || 'dev'}
+        </div>
       </div>
       {show_search && (
         <div className="settings_bar" style={{ gridColumn: '1 / -1', gap: 8 }}>
