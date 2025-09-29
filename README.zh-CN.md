@@ -1,5 +1,6 @@
 ![editor](assets/icon.svg)
 # MarkdownMonkey
+[English Guide](README.md)
 
 ![en](https://img.shields.io/badge/lang-English-blue) ![zh](https://img.shields.io/badge/lang-zh--CN-brightgreen) ![Tauri](https://img.shields.io/badge/Tauri-2.x-24C8DB?logo=tauri&logoColor=white) ![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=white) ![TypeScript](https://img.shields.io/badge/TypeScript-5-blue?logo=typescript&logoColor=white) ![Rust](https://img.shields.io/badge/Rust-stable-000?logo=rust&logoColor=white) ![Vite](https://img.shields.io/badge/Vite-7-646CFF?logo=vite&logoColor=white)
 
@@ -29,7 +30,6 @@
   - 内置 `zh-CN` 与 `en-US`
 - 各版本更新请参见：[CHANGELOG.md](CHANGELOG.md)
 
-[English Guide](README.md)
 
 
  
@@ -52,7 +52,7 @@ pnpm tauri build
 - 编辑体验
   - CodeMirror 6；Markdown 高亮；XSS 过滤
   - 同步预览；自动保存指示器；专注模式（F11）
-  - 自动换行开关；编辑器字号缩放
+  - 自动换行开关；编辑器字号缩放；格式化快捷键（加粗/斜体/行内代码）
   - 粘贴图片自动保存至 `images/` 并插入引用
 - 导航与组织
   - 大纲（按标题层级生成、点击跳转、可调宽度）
@@ -66,7 +66,7 @@ pnpm tauri build
   - AI 对话（切换 Provider/Model、流式输出、最小化/拖拽、导出/插入）
 - 安全与持久化
   - API Key 加密存储于系统 Keyring；设置项本地持久化
-  - Capabilities 细粒度文件权限（默认 HOME/DESKTOP）
+  - Capabilities 细粒度文件权限（默认 HOME/DESKTOP）；外部文件变更检测与重载提示
 - 导出与图表
   - HTML/PDF 导出；Mermaid 图表（适配主题）
 
@@ -100,6 +100,8 @@ pnpm tauri build
 - F11 / ESC：切换专注模式
 - Alt+Z：切换自动换行
 - Ctrl+= / Ctrl+- / Ctrl+0：编辑器字号 放大 / 缩小 / 重置
+- Ctrl+B / Ctrl+I / Ctrl+`：加粗 / 斜体 / 行内代码
+- Ctrl+Shift+L：显示/隐藏行号
 
 ## 国际化
 内置 `zh-CN` 与 `en-US` 两套文案；在设置里切换语言后即时生效，AI 相关弹窗与提示也已本地化。

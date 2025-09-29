@@ -1,5 +1,6 @@
 ![editor](assets/icon.svg)
 # MarkdownMonkey
+[中文使用说明](README.zh-CN.md)
 
 ![en](https://img.shields.io/badge/lang-English-blue) ![zh](https://img.shields.io/badge/lang-zh--CN-brightgreen) ![Tauri](https://img.shields.io/badge/Tauri-2.x-24C8DB?logo=tauri&logoColor=white) ![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=white) ![TypeScript](https://img.shields.io/badge/TypeScript-5-blue?logo=typescript&logoColor=white) ![Rust](https://img.shields.io/badge/Rust-stable-000?logo=rust&logoColor=white) ![Vite](https://img.shields.io/badge/Vite-7-646CFF?logo=vite&logoColor=white)
 
@@ -12,6 +13,7 @@ Highlights:
   - Live preview & code highlighting (marked + DOMPurify + highlight.js)
   - Synced scrolling; match highlighting in editor and preview
   - Word wrap toggle (Alt+Z); editor font zoom (Ctrl+= / Ctrl+- / Ctrl+0)
+  - Formatting shortcuts: Bold (Ctrl+B), Italic (Ctrl+I), Inline code (Ctrl+`)
 - Organization
   - Draggable split panes; resizable outline/file-tree sidebar with folding
   - Outline & file tree; multi-tabs with drag reordering and context actions
@@ -21,6 +23,7 @@ Highlights:
 - Security & Persistence
   - Secure storage (OS keyring), settings persisted via @tauri-apps/plugin-store
   - Local-first auto save; local history snapshots (latest 20)
+  - External file change detection with reload prompt
 - Export & Diagrams
   - Export HTML / PDF (preserved styles & highlights)
   - Mermaid diagrams (flowchart/sequence/Gantt/pie), theme-aware
@@ -29,7 +32,6 @@ Highlights:
   - i18n: zh-CN and en-US included
 - For version-specific updates, see CHANGELOG: [CHANGELOG.md](CHANGELOG.md)
 
-[中文使用说明](README.zh-CN.md)
 
 
 
@@ -68,6 +70,7 @@ pnpm tauri build
 - Security & Persistence
   - OS keyring for API key; settings via @tauri-apps/plugin-store
   - Capability-scoped FS (HOME/DESKTOP by default)
+  - External file change detection with reload prompt
 - Export & Diagrams
   - HTML/PDF via html2pdf.js; Mermaid diagrams (theme-aware)
 
@@ -101,6 +104,8 @@ pnpm tauri build
 - F11 / ESC: Toggle focus mode
 - Alt+Z: Toggle word wrap
 - Ctrl+= / Ctrl+- / Ctrl+0: Editor font zoom + / − / reset
+- Ctrl+B / Ctrl+I / Ctrl+`: Bold / Italic / Inline code
+- Ctrl+Shift+L: Toggle line numbers
 
 ## Internationalization
 Chinese (zh-CN) and English (en-US) strings are prepared in `src/i18n.ts`. The UI reads `ui_language` from settings (persisted in store).
