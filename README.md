@@ -114,8 +114,6 @@ pnpm tauri build
 ![Main Interface](assets/screenshotEN3.png)
 
 
-> **Note**: Additional screenshots for v0.3.0 features (Image Manager, Table Editor, Keyboard Shortcuts) can be captured from the running application.
-
 ## Shortcuts
 
 - Ctrl+N: New document
