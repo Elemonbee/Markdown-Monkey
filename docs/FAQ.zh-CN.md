@@ -504,9 +504,9 @@ MarkdownMonkey 应用**免费**，但 AI 服务可能收费：
 
 **A**:
 
-- [用户手册](./USER_MANUAL.md)
-- [AI 使用教程](./AI_TUTORIAL.md)
-- [项目架构](./ARCHITECTURE.md)
+- [用户手册](./USER_MANUAL.zh-CN.md)
+- [AI 使用教程](./AI_TUTORIAL.zh-CN.md)
+- [项目架构](./ARCHITECTURE.zh-CN.md)
 
 ### Q: 有社区群组吗？
 

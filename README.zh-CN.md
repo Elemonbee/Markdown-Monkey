@@ -35,6 +35,9 @@
 
 ## 文档
 
+- [用户手册](docs/USER_MANUAL.zh-CN.md) - 完整的使用指南和功能说明。
+- [AI 使用教程](docs/AI_TUTORIAL.zh-CN.md) - AI 功能配置和使用教程。
+- [常见问题](docs/FAQ.zh-CN.md) - 常见问题解答。
 - [架构指南](docs/ARCHITECTURE.zh-CN.md) - 了解模块化的 Hooks 架构。
 - [贡献指南](docs/CONTRIBUTING.zh-CN.md) - 如何设置和构建项目。
 - [更新日志](CHANGELOG.md) - 版本历史。
@@ -99,7 +102,17 @@ pnpm tauri build
 
 ## 截图
 
-![ai-chat](assets/screenshotZH1.png) ![ai-chat](assets/screenshotZH2.png)
+### 主界面
+
+![主界面](assets/screenshotZH1.png)
+
+_编辑器与实时预览、文件树、大纲_
+
+![AI 对话](assets/screenshotZH2.png)
+
+_AI 对话集成，支持流式响应_
+
+> **说明**：v0.3.0 新功能（图片管理器、表格编辑器、快捷键帮助）的截图可从运行中的应用捕获。
 
 ## 快捷键
 

@@ -37,6 +37,9 @@ Highlights:
 
 ## Documentation
 
+- [User Manual](docs/USER_MANUAL.en-US.md) - Complete usage guide and feature descriptions.
+- [AI Tutorial](docs/AI_TUTORIAL.en-US.md) - AI feature configuration and usage tutorial.
+- [FAQ](docs/FAQ.en-US.md) - Frequently asked questions.
 - [Architecture Guide](docs/ARCHITECTURE.md) - Learn about the modular Hooks-based architecture.
 - [Contributing Guide](docs/CONTRIBUTING.md) - How to set up and build the project.
 - [Changelog](CHANGELOG.md) - Version history.
@@ -102,7 +105,17 @@ pnpm tauri build
 
 ## Screenshots
 
-![ai-chat](assets/screenshotEN1.png) ![ai-chat](assets/screenshotEN2.png)
+### Main Interface
+
+![Main Interface](assets/screenshotEN1.png)
+
+_Editor with live preview, file tree, and outline_
+
+![AI Chat](assets/screenshotEN2.png)
+
+_AI chat integration with streaming responses_
+
+> **Note**: Additional screenshots for v0.3.0 features (Image Manager, Table Editor, Keyboard Shortcuts) can be captured from the running application.
 
 ## Shortcuts
 
