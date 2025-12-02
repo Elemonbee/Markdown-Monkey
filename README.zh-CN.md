@@ -106,13 +106,10 @@ pnpm tauri build
 
 ![主界面](assets/screenshotZH1.png)
 
-_编辑器与实时预览、文件树、大纲_
+![主界面](assets/screenshotZH2.png)
 
-![AI 对话](assets/screenshotZH2.png)
+![主界面](assets/screenshotZH3.png)
 
-_AI 对话集成，支持流式响应_
-
-> **说明**：v0.3.0 新功能（图片管理器、表格编辑器、快捷键帮助）的截图可从运行中的应用捕获。
 
 ## 快捷键
 
