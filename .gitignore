@@ -6,3 +6,29 @@ src-tauri/target/
 **/.vite/
 **/.turbo/
 **/.pnpm-store/
+
+# Build analysis
+stats.html
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+*.suo
+*.ntvs
+*.njsproj
+*.sln
+*.sw?
+
+# Operating System files
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Environment variables
+.env
+.env.*
+!.env.example
+
+# Testing
+coverage/
