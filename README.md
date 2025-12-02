@@ -109,11 +109,10 @@ pnpm tauri build
 
 ![Main Interface](assets/screenshotEN1.png)
 
-_Editor with live preview, file tree, and outline_
+![Main Interface](assets/screenshotEN2.png)
 
-![AI Chat](assets/screenshotEN2.png)
+![Main Interface](assets/screenshotEN3.png)
 
-_AI chat integration with streaming responses_
 
 > **Note**: Additional screenshots for v0.3.0 features (Image Manager, Table Editor, Keyboard Shortcuts) can be captured from the running application.
 
