@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { memo, useState, useEffect, useRef } from 'react'
 
 interface Command {
   id: string
@@ -14,15 +14,20 @@ interface CommandPaletteProps {
   on_close: () => void
 }
 
-export default function CommandPalette({ is_open, commands, ui_language, on_close }: CommandPaletteProps) {
+function CommandPaletteComponent({
+  is_open,
+  commands,
+  ui_language,
+  on_close,
+}: CommandPaletteProps) {
   const [search_query, set_search_query] = useState('')
   const [selected_index, set_selected_index] = useState(0)
   const input_ref = useRef<HTMLInputElement>(null)
-  
-  const filtered_commands = commands.filter(cmd => 
+
+  const filtered_commands = commands.filter((cmd) =>
     cmd.label.toLowerCase().includes(search_query.toLowerCase())
   )
-  
+
   useEffect(() => {
     if (is_open) {
       set_search_query('')
@@ -30,19 +35,19 @@ export default function CommandPalette({ is_open, commands, ui_language, on_clos
       setTimeout(() => input_ref.current?.focus(), 100)
     }
   }, [is_open])
-  
+
   useEffect(() => {
     if (!is_open) return
-    
+
     const handle_keydown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         on_close()
       } else if (e.key === 'ArrowDown') {
         e.preventDefault()
-        set_selected_index(i => Math.min(i + 1, filtered_commands.length - 1))
+        set_selected_index((i) => Math.min(i + 1, filtered_commands.length - 1))
       } else if (e.key === 'ArrowUp') {
         e.preventDefault()
-        set_selected_index(i => Math.max(i - 1, 0))
+        set_selected_index((i) => Math.max(i - 1, 0))
       } else if (e.key === 'Enter') {
         e.preventDefault()
         if (filtered_commands[selected_index]) {
@@ -51,16 +56,16 @@ export default function CommandPalette({ is_open, commands, ui_language, on_clos
         }
       }
     }
-    
+
     window.addEventListener('keydown', handle_keydown)
     return () => window.removeEventListener('keydown', handle_keydown)
   }, [is_open, selected_index, filtered_commands, on_close])
-  
+
   if (!is_open) return null
-  
+
   return (
     <div className="modal_overlay" onClick={on_close}>
-      <div className="command_palette" onClick={e => e.stopPropagation()}>
+      <div className="command_palette" onClick={(e) => e.stopPropagation()}>
         <div className="command_palette_header">
           <input
             ref={input_ref}
@@ -68,7 +73,7 @@ export default function CommandPalette({ is_open, commands, ui_language, on_clos
             className="command_palette_input"
             placeholder={ui_language === 'en-US' ? 'Type a command...' : '输入命令...'}
             value={search_query}
-            onChange={e => {
+            onChange={(e) => {
               set_search_query(e.target.value)
               set_selected_index(0)
             }}
@@ -91,9 +96,7 @@ export default function CommandPalette({ is_open, commands, ui_language, on_clos
                 onMouseEnter={() => set_selected_index(index)}
               >
                 <span className="command_palette_label">{cmd.label}</span>
-                {cmd.shortcut && (
-                  <span className="command_palette_shortcut">{cmd.shortcut}</span>
-                )}
+                {cmd.shortcut && <span className="command_palette_shortcut">{cmd.shortcut}</span>}
               </div>
             ))
           )}
@@ -102,3 +105,6 @@ export default function CommandPalette({ is_open, commands, ui_language, on_clos
     </div>
   )
 }
+
+const CommandPalette = memo(CommandPaletteComponent)
+export default CommandPalette

@@ -1,5 +1,7 @@
 ![editor](assets/icon.svg)
+
 # MarkdownMonkey
+
 [English Guide](README.md)
 
 ![en](https://img.shields.io/badge/lang-English-blue) ![zh](https://img.shields.io/badge/lang-zh--CN-brightgreen) ![Tauri](https://img.shields.io/badge/Tauri-2.x-24C8DB?logo=tauri&logoColor=white) ![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=white) ![TypeScript](https://img.shields.io/badge/TypeScript-5-blue?logo=typescript&logoColor=white) ![Rust](https://img.shields.io/badge/Rust-stable-000?logo=rust&logoColor=white) ![Vite](https://img.shields.io/badge/Vite-7-646CFF?logo=vite&logoColor=white)
@@ -9,6 +11,7 @@
 > 本项目为 Vibe Coding 项目，所有代码由 AI 生成。
 
 核心特性：
+
 - 编辑与预览
   - 实时预览与代码高亮（marked + DOMPurify + highlight.js）
   - 编辑/预览同步滚动；命中高亮一致
@@ -30,9 +33,11 @@
   - 内置 `zh-CN` 与 `en-US`
 - 各版本更新请参见：[CHANGELOG.md](CHANGELOG.md)
 
+## 文档
 
-
- 
+- [架构指南](docs/ARCHITECTURE.zh-CN.md) - 了解模块化的 Hooks 架构。
+- [贡献指南](docs/CONTRIBUTING.zh-CN.md) - 如何设置和构建项目。
+- [更新日志](CHANGELOG.md) - 版本历史。
 
 ## 开发
 
@@ -58,6 +63,11 @@ pnpm tauri build
   - 大纲（按标题层级生成、点击跳转、可调宽度）
   - 文件树（新建/重命名/删除/刷新/复制路径）
   - 多标签（拖拽排序、右键关闭当前/右侧/仅保留）
+- **新功能 (v0.3.0)**
+  - **图片管理器**: 查看所有图片、压缩本地图片（低/中/高画质）、网格视图
+  - **表格编辑器**: 可视化 Excel 风格编辑、添加/删除行列、自动格式化
+  - **快捷键帮助**: 内置快捷键参考（点击工具栏 "⌨️ 快捷键"）
+  - **性能优化**: 大文件检测（>10MB 警告）、自动保存防抖优化
 - 搜索
   - 文内搜索替换：正则/忽略大小写，命中高亮，上一处/下一处/替换
   - 全局搜索（Ctrl+Shift+F）：扫描当前工作区 Markdown 文件
@@ -88,9 +98,11 @@ pnpm tauri build
   - 顶部按钮导出 HTML/PDF；PDF 保留样式与代码高亮
 
 ## 截图
+
 ![ai-chat](assets/screenshotZH1.png) ![ai-chat](assets/screenshotZH2.png)
 
 ## 快捷键
+
 - Ctrl+N：新建文档
 - Ctrl+O：打开文件
 - Ctrl+S：保存
@@ -104,7 +116,9 @@ pnpm tauri build
 - Ctrl+Shift+L：显示/隐藏行号
 
 ## 国际化
+
 内置 `zh-CN` 与 `en-US` 两套文案；在设置里切换语言后即时生效，AI 相关弹窗与提示也已本地化。
 
 ## 许可证
+
 MIT

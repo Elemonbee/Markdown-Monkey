@@ -2,9 +2,13 @@ declare module 'html2pdf.js' {
   export type Html2PdfOptions = {
     margin?: number | [number, number, number, number]
     filename?: string
-    image?: { type?: 'jpeg' | 'png', quality?: number }
-    html2canvas?: { scale?: number, useCORS?: boolean }
-    jsPDF?: { unit?: 'mm' | 'pt' | 'in', format?: string | [number, number], orientation?: 'portrait' | 'landscape' }
+    image?: { type?: 'jpeg' | 'png'; quality?: number }
+    html2canvas?: { scale?: number; useCORS?: boolean }
+    jsPDF?: {
+      unit?: 'mm' | 'pt' | 'in'
+      format?: string | [number, number]
+      orientation?: 'portrait' | 'landscape'
+    }
   }
 
   export interface Html2PdfWorker {
@@ -21,5 +25,3 @@ declare module 'html2pdf.js' {
   const html2pdf: () => Html2PdfInstance
   export default html2pdf
 }
-
-

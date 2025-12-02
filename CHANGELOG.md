@@ -1,156 +1,172 @@
-# Changelog / 更新日志
+# Changelog
 
-All notable changes to MarkdownMonkey will be documented in this file.
-本文件记录 MarkdownMonkey 的所有重要更新。
+## [Unreleased]
 
-## [0.2.0] - 2025-09-29
+### New Features & Performance Improvements (2025-12-02)
 
-### 🎉 New Features / 新功能
+#### Added
 
-#### English
-- Synced dual‑pane preview with toggle: two‑way linked scrolling between editor and preview.
-- Command Palette Quick Open (Ctrl+P): quick switch between open tabs and recent files; Alt+1..9 for top recent items.
- - Word wrap toggle (Alt+Z), font zoom (Ctrl+=/Ctrl+-/Ctrl+0), insert date/time commands.
- - Global search (Ctrl+Shift+F) across workspace Markdown files.
- - Formatting shortcuts: Bold (Ctrl+B), Italic (Ctrl+I), Inline code (Ctrl+`).
- - Line numbers toggle (Ctrl+Shift+L), persisted in settings.
- - External file change detection with reload prompt.
+- **🖼️ Image Manager** - Unified image management for Markdown documents
+  - Automatically extracts all image references from current document
+  - Grid layout with thumbnails for easy browsing
+  - Distinguishes between local (📁) and remote (🌐) images
+  - Shows image name (alt text), line number, and type
+  - Hover effect for better interaction
+  - Click toolbar "🖼️ Images" button to open
+  - **🗜️ Image Compression** - Compress local images with one click
+    - Three quality presets: Low (0.5MB), Medium (1MB), High (2MB)
+    - Real-time progress bar during compression
+    - Shows compression ratio and size comparison
+    - Replaces original file with compressed version
+    - Uses browser-image-compression library with Web Worker
+- **📊 Visual Table Editor** - Excel-style table editing experience
+  - Place cursor in Markdown table and click "📊 Table" button
+  - Visual cell editing with input fields
+  - Add/delete rows and columns with one click
+  - Automatic table formatting and alignment
+  - Supports left/center/right alignment (`:---`, `:---:`, `---:`)
+  - No more manual pipe character alignment needed!
+- **⌨️ Keyboard Shortcuts Help** - Quick reference for all shortcuts
+  - Click "⌨️ Shortcuts" button in toolbar
+  - Organized by category (File, Tabs, Search, View, Editor, Formatting)
+  - Beautiful UI with kbd-style key display
+  - Bilingual support (Chinese/English)
+  - Includes helpful tip at bottom
 
-#### 中文
-- 同步双栏预览（可开关）：编辑区与预览区双向联动滚动。
-- 命令面板快速打开（Ctrl+P）：在已打开标签与最近文件间快速切换；Alt+1..9 打开前 9 个最近项。
- - 自动换行开关（Alt+Z）、字号缩放（Ctrl+=/Ctrl+-/Ctrl+0）、插入日期时间命令。
- - 全局搜索（Ctrl+Shift+F）：扫描工作区内的 Markdown 文件。
- - 格式化快捷键：加粗（Ctrl+B）、斜体（Ctrl+I）、行内代码（Ctrl+`）。
- - 行号开关（Ctrl+Shift+L），写入设置持久化。
- - 外部文件变更检测与“重新载入”提示。
+#### Performance
 
-### 📝 Improvements / 改进
+- **⚡ Debounce Optimization** - Improved responsiveness
+  - Auto-save delay reduced from 3000ms to 2000ms
+  - Preview update debounce set to 300ms
+  - Centralized performance constants for easy tuning
+- **📁 Large File Detection** - Smart file size warnings
+  - 5MB-10MB files: Console warning
+  - > 10MB files: Confirmation dialog before opening
+  - Prevents performance issues with very large files
+  - Graceful error handling if detection fails
 
-#### English
-- Stabilized scroll behavior and preview sync on large documents.
-- Updated documentation and shortcuts to reflect new features.
+### UI/UX Improvements (2025-12-01)
 
-#### 中文
-- 在大文档下优化滚动与预览同步的稳定性。
-- 更新了文档与快捷键，反映新增能力。
+#### Changed
 
-### 🔧 Technical Details / 技术细节
+- **AI Provider Configuration Simplified** - Reduced from 11 options to 3 core options
+  - Consolidated OpenAI-compatible providers (DeepSeek, Kimi, Qwen, etc.) into single "OpenAI (兼容 API)" option
+  - Retained Claude and Ollama as separate options
+  - Added inline usage instructions with examples for different providers
+  - Removed ~60 lines of redundant provider configuration code
 
-#### English
-- Injected dynamic commands into Command Palette from `open_tabs` and `recent_files`.
-- Added `Ctrl+P` handler alongside `Ctrl+Shift+P`; persisted settings with `@tauri-apps/plugin-store`.
-- Version bumped across `package.json`, `src-tauri/tauri.conf.json`, and `src-tauri/Cargo.toml` to 0.2.0.
+- **TabBar Component Integration** - Replaced 67 lines of inline tab rendering with reusable TabBar component
+  - Improved code organization and maintainability
+  - Simplified click-to-switch functionality
+  - Removed drag-and-drop feature due to Tauri webview limitations
 
-#### 中文
-- 将 `open_tabs` 与 `recent_files` 动态注入命令面板。
-- 新增 `Ctrl+P` 快捷键（与 `Ctrl+Shift+P` 并存）；设置通过 `@tauri-apps/plugin-store` 持久化。
-- 统一将 `package.json`、`src-tauri/tauri.conf.json`、`src-tauri/Cargo.toml` 升级为 0.2.0。
+#### Removed
 
-## [0.1.1.1] - 2025-09-19
+- Individual provider options: DeepSeek, Kimi, OpenRouter, Gemini, Azure OpenAI, Qwen, Baidu, ChatGLM
+- Drag-and-drop tab reordering (Tauri webview compatibility issue)
 
-### 🐛 Bug Fixes / 问题修复
+#### Added
 
-#### English
-- **Fixed New Document Tab Issue**: Creating a new document now properly creates a new tab (Untitled-1, Untitled-2, etc.) instead of replacing the current document. Multiple unsaved documents can now be opened simultaneously.
-- **Fixed File Association**: Fixed the issue where .md files couldn't be opened by double-clicking or using "Open with" context menu. The application now properly handles command-line arguments and supports single-instance mode.
-- **Code Quality Improvements**: Removed all debug console.log statements and println! calls for production-ready code.
- - **ESLint/Linter Fixes**: Replaced implicit `any`, added missing hook dependencies, and tightened types for safer builds.
+- **Keyboard Shortcuts** - Global keyboard shortcuts for tab management
+  - `Ctrl+Tab` - Switch to next tab (with circular navigation)
+  - `Ctrl+Shift+Tab` - Switch to previous tab (reverse circular navigation)
+  - `Ctrl+W` - Close current tab
+- **AI Configuration Enhancements**
+  - "Test Connection" button next to API Key input for quick validation
+  - Collapsible configuration templates panel with 5 popular providers (DeepSeek, Kimi, Qwen, Ollama, OpenRouter)
+  - Detailed API Base URL and model examples for each provider
 
-#### 中文
-- **修复新建文档标签问题**：新建文档现在会正确创建新标签（Untitled-1、Untitled-2 等），而不是替换当前文档。支持同时打开多个未保存的文档。
-- **修复文件关联问题**：修复了无法通过双击或"打开方式"菜单打开 .md 文件的问题。应用程序现在能正确处理命令行参数并支持单实例模式。
-- **代码质量改进**：移除了所有调试用的 console.log 语句和 println! 调用，使代码更适合生产环境。
- - **ESLint 修复**：替换隐式 `any`、补齐缺失的 Hook 依赖、收紧类型，确保更严谨的构建。
+- **TabBar UX Improvements**
+  - Long filename truncation with ellipsis (max 200px) and tooltip on hover
+  - Tab max-width constraint (250px) to prevent layout overflow
+  - Tab height increased to 32px+ for better clickability
+  - Enhanced close button (20x20px with hover background)
+  - Batch operations in right-click menu: "Close All Tabs" option added
 
-### 🔧 Technical Details / 技术细节
+- **Responsive UI Implementation** ⭐ NEW
+  - Mobile view (< 768px): Single-column layout with editor/preview switcher
+  - Sidebar drawer with overlay for mobile devices
+  - Large icon buttons for mobile (✏️ Editor / 👁️ Preview)
+  - Tablet view (768px-1024px): Compact dual-pane layout
+  - Dynamic CSS Grid breakpoints
 
-#### English
-- Implemented proper untitled document management with memory storage
-- Added single-instance plugin support for file association
-- Improved path normalization for cross-platform compatibility
-- Enhanced error handling with silent failures for better user experience
+- **UI/UX Visual Improvements** ⭐ NEW
+- Button Hierarchy: Primary (blue), Secondary (default), Danger (red) styles
+- Hover animations with smooth transitions (transform + border color)
+- Sidebar tab-style switcher with bottom border indicator
+- All buttons have improved hover feedback with lift effect
 
-#### 中文
-- 实现了正确的未命名文档管理，使用内存存储
-- 添加了单实例插件支持以实现文件关联
-- 改进了路径规范化以提高跨平台兼容性
-- 增强了错误处理，采用静默失败以改善用户体验
+- **AI Chat Modal Improvements**
+  - Simplified UI: removed redundant Base URL/Model inputs
+  - Auto-sync with global settings (no duplicate configuration needed)
+  - Fixed 401 error caused by Base URL being reset to default
+  - Read-only display of current provider and model name
 
-## [0.1.1] - 2025-09-15
+- **Testing**
+  - Unit tests for TabBar component (7 tests, 100% pass rate)
+  - Test coverage: rendering, clicking, closing, context menu, event propagation
 
-### 🎉 New Features / 新功能
+#### Fixed
 
-#### English
-- **Auto-save Indicator**: Real-time display of document save status in the status bar with color-coded indicators (green/orange/red). Documents are automatically saved 3 seconds after editing.
-- **Command Palette** (Ctrl+Shift+P): Quick access to all features with search filtering and keyboard navigation support.
-- **Focus Mode** (F11): Immersive writing experience that hides all UI elements except the editor, with larger font size and line height for better readability.
-- **Mermaid Diagram Support**: Automatic rendering of various diagram types including flowcharts, sequence diagrams, Gantt charts, and pie charts. Diagrams adapt to light/dark themes.
+- TypeScript error: `info.__children` potentially undefined in file tree rendering
+- AI Chat 401 authorization error (removed automatic Base URL reset logic)
 
-#### 中文
-- **自动保存指示器**：在状态栏实时显示文档保存状态，使用颜色编码指示器（绿色/橙色/红色）。文档在编辑后3秒自动保存。
-- **命令面板**（Ctrl+Shift+P）：快速访问所有功能，支持搜索过滤和键盘导航。
-- **专注模式**（F11）：沉浸式写作体验，隐藏除编辑器外的所有UI元素，更大的字体和行高提供更好的可读性。
-- **Mermaid 图表支持**：自动渲染各种图表类型，包括流程图、序列图、甘特图和饼图。图表自适应明暗主题。
+### Major Refactoring - Hooks-based Architecture (2025-11-30)
 
-### 🐛 Bug Fixes / 问题修复
+#### Added
 
-#### English
-- **Fixed Word Count Statistics**: Improved accuracy of word count for mixed Chinese-English content. Now correctly counts English words and CJK characters separately.
-- **Fixed Scrollbar Issues**: Resolved problems with both horizontal and vertical scrollbars not appearing correctly in the CodeMirror editor, especially when opening existing documents. Scrollbars now display properly based on content overflow.
+- **useEditorState** - Centralized editor and UI state management (240 lines, 18 tests)
+- **useFileManager** - Unified file operations and tab management (380 lines, 5 tests)
+- **useSettingsManager** - Application settings persistence layer (282 lines, 3 tests)
+- **usePreviewManager** - Markdown rendering and Mermaid chart processing (121 lines, 7 tests)
+- **Unit Tests** - Added comprehensive tests for hooks (33 tests passing, 100% pass rate)
+- **Architecture Documentation** - Created detailed architecture guides (EN/ZH)
+- **Contributing Guide** - Added developer setup and contribution guidelines
+- **Test Coverage Report** - Documented current test coverage
+- **Project Summary** - Comprehensive project completion report
+- **Prettier Configuration** - Code formatting setup for consistency
+- **NPM Scripts** - Added format, format:check, and type-check scripts
 
-#### 中文
-- **修复字数统计**：提高了中英文混合内容字数统计的准确性。现在能正确分别统计英文单词和CJK字符。
-- **修复滚动条问题**：解决了 CodeMirror 编辑器中水平和垂直滚动条无法正确显示的问题，特别是打开现有文档时。滚动条现在能根据内容溢出正确显示。
+#### Changed
 
-### 📝 Improvements / 改进
+- Refactored `App.tsx` from 2600+ lines to ~2000 lines (~600 lines reduced, 23% improvement)
+- Extracted preview rendering logic to `usePreviewManager`
+- Integrated existing `useAI` and `useAIState` hooks
+- Improved code organization and maintainability
+- Enhanced type safety across all hooks
+- Formatted 44 files with Prettier for consistent code style
 
-#### English
-- Updated README documentation in both English and Chinese
-- Added comprehensive keyboard shortcuts
-- Enhanced UI responsiveness in focus mode
-- Better error handling for Mermaid diagram rendering
+#### Fixed
 
-#### 中文
-- 更新了中英文 README 文档
-- 添加了完整的键盘快捷键
-- 增强了专注模式下的 UI 响应性
-- 改进了 Mermaid 图表渲染的错误处理
+- Resolved all TypeScript compilation errors (zero errors achieved)
+- Fixed timer type issues in `App.tsx` using `ReturnType<typeof setInterval>`
+- Corrected component import paths (PascalCase)
+- Fixed `verbatimModuleSyntax` errors in hook imports
 
-### 🔧 Technical Details / 技术细节
+#### Performance
 
-#### English
-- Added `mermaid` package for diagram rendering
-- Implemented proper height constraints for CodeMirror editor
-- Added CSS customizations for scrollbar visibility
-- Integrated command palette component with search functionality
+- Mermaid diagram caching for faster re-renders
+- Memory limit management for untitled documents
+- Optimized scroll synchronization
+- Improved code splitting through modular hooks
 
-#### 中文
-- 添加了 `mermaid` 包用于图表渲染
-- 为 CodeMirror 编辑器实现了正确的高度约束
-- 添加了用于滚动条可见性的 CSS 自定义
-- 集成了带搜索功能的命令面板组件
+#### Documentation
 
-## [0.1.0] - 2025-09-14
+- Created `docs/ARCHITECTURE.md` and `.zh-CN.md`
+- Created `docs/CONTRIBUTING.md` and `.zh-CN.md`
+- Created `docs/TEST_COVERAGE.md`
+- Created `docs/PROJECT_SUMMARY.md`
+- Updated `README.md` and `README.zh-CN.md`
+- Deleted 18 obsolete documentation files
 
-### Initial Release / 初始版本
+#### Testing
 
-#### English
-- Basic Markdown editing with live preview
-- File management (open, save, new)
-- Syntax highlighting
-- AI assistant integration
-- Multi-tab support
-- Search and replace functionality
-- Export to HTML/PDF
-- Internationalization (zh-CN, en-US)
+- Set up Vitest testing framework
+- Added @testing-library/react for component testing
+- Created comprehensive test suites for 4 core hooks
+- Achieved 60-85% estimated coverage on tested hooks
+- All 33 tests passing
 
-#### 中文
-- 基础 Markdown 编辑与实时预览
-- 文件管理（打开、保存、新建）
-- 语法高亮
-- AI 助手集成
-- 多标签页支持
-- 搜索和替换功能
-- 导出为 HTML/PDF
-- 国际化支持（中文、英文）
+### Previous Versions
+
+See commit history for earlier changes.

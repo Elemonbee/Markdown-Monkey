@@ -14,12 +14,12 @@
 }
 
 /* 主题变量 */
-html[data-theme="dark"] {
+html[data-theme='dark'] {
   --bg: #242424;
   --panel: #111111;
-  --text: rgba(255,255,255,0.87);
+  --text: rgba(255, 255, 255, 0.87);
 }
-html[data-theme="light"] {
+html[data-theme='light'] {
   --bg: #ffffff;
   --panel: #f7f7f7;
   --text: #213547;
