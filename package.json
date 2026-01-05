@@ -42,7 +42,7 @@
     "highlight.js": "^11.11.1",
     "html2canvas": "^1.4.1",
     "html2pdf.js": "^0.12.0",
-    "jspdf": "^3.0.2",
+    "jspdf": "^4.0.0",
     "marked": "^16.2.1",
     "mermaid": "^11.11.0",
     "react": "^19.1.1",
